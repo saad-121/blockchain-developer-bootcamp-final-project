@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.22 <0.9.0;
-pragma experimental ABIEncoderV2;
+// pragma solidity >=0.4.22 <0.9.0;
+pragma solidity ^0.8.0;
+// pragma experimental ABIEncoderV2;
 
 contract PasswordManager {
 
@@ -21,7 +22,7 @@ contract PasswordManager {
     /* Events */
     event PasswordListRead(address indexed sender);
 
-    event PasswordSaved(address indexed sender);
+    event PasswordSaved(address indexed sender, Password pw);
 
     event PasswordDeleted(address indexed sender);
 
@@ -30,6 +31,7 @@ contract PasswordManager {
     address public owner;
 
     //contract ballance
+    uint public balance;
 
     //creat struct for passwords
     struct Password {
@@ -39,16 +41,21 @@ contract PasswordManager {
     }
 
     //Have mapping for storing passwords
-    mapping(address => Password[]) passwords;
+    mapping(address => Password[]) public passwords;
 
 
-    constructor() public{
+    constructor() {
         owner = msg.sender;
     }
 
     /* Modifiers - maybe? */
     modifier hasAPassword {
-        require(passwords[msg.sender].length > 0);
+        require(passwords[msg.sender].length > 0, "There are no passwords to retrieve!");
+        _;
+    }
+    
+    modifier onlyOwner {
+        require(msg.sender == owner, "Only the owner can access this function!");
         _;
     }
 
@@ -56,10 +63,10 @@ contract PasswordManager {
     function getPasswordList() public view hasAPassword returns (Password[] memory){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
 
         //- ?Check if it exists in mapping (may be done at browser level)
-        // require(passwords[msg.sender], "You do not have a password stored.");
+        // require(passwords[msg.sender].length > 0, "You do not have a password stored.");
 
        
-        emit PasswordListRead(msg.sender);
+        // emit PasswordListRead(msg.sender);
 
         //return password list
         return passwords[msg.sender];
@@ -75,40 +82,58 @@ contract PasswordManager {
         //add to passwords mapping
         passwords[msg.sender].push(encryptedPassword);
 
-        emit PasswordSaved(msg.sender);
+        emit PasswordSaved(msg.sender, encryptedPassword);
 
         //return true
         return true;
     }
 
-    function updatePassword() public view hasAPassword returns (Password[] memory){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
+    function updatePassword(uint _index, bytes32 _updatedDomain, bytes32 _updatedUsername, bytes32 _updatedPassword) public hasAPassword returns (bool){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
 
         //- ?Check if it exists in mapping (may be done at browser level)
         // require(passwords[msg.sender], "You do not have a password stored.");
 
+        passwords[msg.sender][_index] = Password({domain: _updatedDomain, username: _updatedUsername, password: _updatedPassword});
        
-        emit PasswordRead(msg.sender);
+        emit PasswordUpdated(msg.sender);
         
-        //return password list
-        return passwords[msg.sender];
+        //return true
+        return true;
     }
 
-    function deletePassword() public view hasAPassword returns (Password[] memory){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
+    function deletePassword(uint _index) public hasAPassword returns (bool){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
 
         //- ?Check if it exists in mapping (may be done at browser level)
         // require(passwords[msg.sender], "You do not have a password stored.");
-
-       
-        emit PasswordRead(msg.sender);
         
-        //return password list
-        return passwords[msg.sender];
+        uint l = passwords[msg.sender].length;
+        
+        if (l > 1) {
+            passwords[msg.sender][_index] = passwords[msg.sender][l - 1];
+        }
+        
+        passwords[msg.sender].pop();
+       
+        emit PasswordDeleted(msg.sender);
+        
+        //return true
+        return true;
     }
 
     //fallback function
-    // fallback() payable public {
-
-    // }
+    fallback() payable external {
+    balance += msg.value;
+    }
 
     //function to withdraw funds from contract - onlyOwner
+    function withdraw(uint _amountToWithdraw) public payable onlyOwner returns (bool) {
+        require(_amountToWithdraw <= balance, "Insufficient balance!");
+        balance -= _amountToWithdraw;
+        (bool success, ) = owner.call{value: _amountToWithdraw}("Withdrawal from Password Manager");
+        require(success);
+        
+        return true;
+    }
+    
+    
 }
