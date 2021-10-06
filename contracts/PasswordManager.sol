@@ -5,7 +5,14 @@ pragma solidity ^0.8.0;
 
 contract PasswordManager {
 
-    
+    //fallback function
+    fallback() payable external {
+    balance += msg.value;
+    }
+
+    receive() payable external {
+    balance += msg.value;
+    }
 
     //TODO Comments
 
@@ -35,6 +42,7 @@ contract PasswordManager {
 
     //creat struct for passwords
     struct Password {
+        uint index;
         bytes32 domain;
         bytes32 username;
         bytes32 password;
@@ -76,8 +84,13 @@ contract PasswordManager {
 
         //- ?Check if it exists in mapping (may be done at browser level)
 
+        //Set password index. This will be used as a key by the frontend.
+        uint _index = 0;
+        if (passwords[msg.sender].length > 0) {
+            _index = passwords[msg.sender].length;
+        }
         //- encrypt
-        Password memory encryptedPassword = Password({domain: _domain, username: _username, password: _password});
+        Password memory encryptedPassword = Password({index: _index, domain: _domain, username: _username, password: _password});
 
         //add to passwords mapping
         passwords[msg.sender].push(encryptedPassword);
@@ -93,7 +106,7 @@ contract PasswordManager {
         //- ?Check if it exists in mapping (may be done at browser level)
         // require(passwords[msg.sender], "You do not have a password stored.");
 
-        passwords[msg.sender][_index] = Password({domain: _updatedDomain, username: _updatedUsername, password: _updatedPassword});
+        passwords[msg.sender][_index] = Password({index: _index, domain: _updatedDomain, username: _updatedUsername, password: _updatedPassword});
        
         emit PasswordUpdated(msg.sender);
         
@@ -120,10 +133,7 @@ contract PasswordManager {
         return true;
     }
 
-    //fallback function
-    fallback() payable external {
-    balance += msg.value;
-    }
+
 
     //function to withdraw funds from contract - onlyOwner
     function withdraw(uint _amountToWithdraw) public payable onlyOwner returns (bool) {
