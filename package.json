@@ -3,16 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@metamask/eth-sig-util": "^4.0.0",
+    "@metamask/onboarding": "^1.0.1",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
     "@truffle/hdwallet-provider": "^1.0.37",
+    "eth-crypto": "^2.1.0",
+    "ethereumjs-util": "^7.1.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "^4.0.3",
+    "react-scripts": "^3.4.4",
+    "styled-components": "^5.3.1",
     "truffle-hdwallet-provider": "^1.0.6",
     "web-vitals": "^1.0.1",
-    "web3": "^1.5.3"
+    "web3": "^1.6.0"
   },
   "scripts": {
     "start": "react-scripts start",
