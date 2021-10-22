@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract PasswordManager {
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract PasswordManager is Ownable{
 
     //fallback function
     fallback() payable external {
@@ -18,7 +20,7 @@ contract PasswordManager {
 
     //TODO Protect against two attack vectors from the "Smart Contracts" section with its the SWC number
 
-    //TODO Inherits from at least one library or interface
+    //TODO Inherits from at least one library or interface - Done: Inherits from Openzeppelin's Ownable
 
     //TODO Can be easily compiled, migrated and tested
     //TODO Have at least five unit tests for your smart contract(s) that pass. 
@@ -31,7 +33,7 @@ contract PasswordManager {
 
     event PasswordUpdated(address indexed sender);
 
-    address public owner;
+    // address public owner;
 
     //contract ballance
     uint public balance;
@@ -47,9 +49,9 @@ contract PasswordManager {
     mapping(address => Password[]) private passwords;
 
 
-    constructor() {
-        owner = msg.sender;
-    }
+    // constructor() {
+    //     owner = msg.sender;
+    // }
 
     /* Modifiers - maybe? */
     modifier hasAPassword {
@@ -57,10 +59,11 @@ contract PasswordManager {
         _;
     }
     
-    modifier onlyOwner {
-        require(msg.sender == owner, "Only the owner can access this function!");
-        _;
-    }
+    //Removed this modifier after added OpenZeppelin
+    // modifier onlyOwner {
+    //     require(msg.sender == owner, "Only the owner can access this function!");
+    //     _;
+    // }
 
 
     function getPasswordList() public view hasAPassword returns (Password[] memory){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
@@ -122,7 +125,7 @@ contract PasswordManager {
     function withdraw(uint _amountToWithdraw) public payable onlyOwner returns (bool) {
         require(_amountToWithdraw <= balance, "Insufficient balance!");
         balance -= _amountToWithdraw;
-        (bool success, ) = owner.call{value: _amountToWithdraw}("Withdrawal from Password Manager");
+        (bool success, ) = msg.sender.call{value: _amountToWithdraw}("Withdrawal from Password Manager");
         require(success);
         
         return true;
