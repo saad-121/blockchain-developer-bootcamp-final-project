@@ -4,7 +4,7 @@ import {abi, networks} from './build/PasswordManager.json';
 import './App.css';
 import Web3 from 'web3';
 // import EthCrypto from 'eth-crypto';
-import {ethUtil, sigUtil}  from 'ethereumjs-util';
+import {ethUtil, sigUtil, bufferToHex}  from 'ethereumjs-util';
 import {encrypt} from 'eth-sig-util';
 import { OnboardingButton } from './MetaMask_OnboardingButton';
 import Button from './Button_Styled';
@@ -16,7 +16,6 @@ class App extends React.Component {
     await this.loadWeb3();
     if (window.web3){
     await this.loadContractData();
-    // await this.getOwner();
     }
   }
 
@@ -38,8 +37,6 @@ class App extends React.Component {
     this.setState({account: accounts[0]});
 
     window.ethereum.on('accountsChanged', (accounts) => {
-      // console.log('new account = ' +accounts[0]);
-      // alert('new account = ' +accounts[0]);
       this.setState({account: accounts[0]});
     });
     window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
@@ -58,7 +55,7 @@ class App extends React.Component {
       /* Get public encryption Key */
       let encryptionPublicKey;
 
-      window.ethereum
+      await window.ethereum
         .request({
           method: 'eth_getEncryptionPublicKey',
           params: [accounts[0]],
@@ -78,11 +75,12 @@ class App extends React.Component {
         });
 
         /* Get encrypted password list from contract */
-        const pwdListEncrypted = await passwordManager.methods.getPasswordList().call()
+        try{
+        let pwdListEncrypted = await passwordManager.methods.getPasswordList().call()
         this.setState({pwdListEncrypted});
+        let newPwdListDecrypted = [];
 
-        if (pwdListEncrypted) {
-          let pwdListDecrypted = [];
+        if (pwdListEncrypted) {  
           let _domain;
           let _username;
           let _password;
@@ -91,10 +89,15 @@ class App extends React.Component {
           _username = this.decrypt(pwd.username);
           _password = this.decrypt(pwd.password);
           let decryptedPassword = {domain: _domain, username: _username, password: _password};
-          pwdListDecrypted.push(decryptedPassword);
+          newPwdListDecrypted.push(decryptedPassword);
           }
-          this.setState({pwdListDecrypted})
+          this.setState({pwdListDecrypted: newPwdListDecrypted})
         }
+        } catch(error) {
+          console.log(error);
+        }
+
+
 
     } else {
       window.alert('Password Manager has not been deployed in this network yet. Please select Ropsten or Ganache. Thank you.')
@@ -118,24 +121,24 @@ class App extends React.Component {
     return(decryptedResult);
   }
 
-  async encrypt(content){
+  encrypt(content){
       /* Encrypting */
   // Currently this encryption method is not working (getting error messages). 
   //TODO: May implement other basic encryption/hash just to test the flow of the app and interactions with different functions in the contract.
-  // const encryptedMessage = ethUtil.bufferToHex(
-  //   Buffer.from(
-  //     JSON.stringify(
-  //       encrypt(
-  //         this.state.encryptionPublicKey,
-  //         { data: 'Hello world!' },
-  //         'x25519-xsalsa20-poly1305'
-  //       )
-  //     ),
-  //     'utf8'
-  //   )
-  // );
+  const encryptedMessage = bufferToHex(
+    Buffer.from(
+      JSON.stringify(
+        encrypt(
+          this.state.encryptionPublicKey,
+          { data: content },
+          'x25519-xsalsa20-poly1305'
+        )
+      ),
+      'utf8'
+    )
+  );
 
-  let encryptedMessage = "";
+  // let encryptedMessage = "";
 
   return encryptedMessage;
   }
@@ -165,7 +168,7 @@ class App extends React.Component {
     this.savePassword = this.savePassword.bind(this);
     this.updateParam = this.updateParam.bind(this);
         this.resetFields = this.resetFields.bind(this);
-        this.decrypt = this.decrypt.bind(this);
+        // this.decrypt = this.decrypt.bind(this);
 
         window.web3 = new Web3(window.ethereum);
 
@@ -178,7 +181,7 @@ class App extends React.Component {
     const value = event.target.value;
 
     this.setState({
-      [name]: value})
+      [name]: value});
       console.log(event);
     console.log(event.target.value);
     console.log(this.state.focusPwdDomain);
@@ -230,32 +233,46 @@ class App extends React.Component {
   }
   const newPassword = {domain: _domain, username: _username, password: _password};
 
-  let pwdListDecryptedCopy = this.state.pwdListDecrypted;
-  for (let p of pwdListDecryptedCopy) {
+  // let pwdListDecryptedCopy = this.state.pwdListDecrypted;
+  for (let p of this.state.pwdListDecrypted) {
     if (p.domain == _domain && p.username == _username && p.password == _password) {
       alert('You already have this password saved.');
-      // this.resetFields();
       
       return "";
     }
   }
       
-  _domain = this.encrypt(_domain);
-  _username = this.encrypt(_username);
-  _password = this.encrypt(_password);
+  let _encryptedDomain = await this.encrypt(_domain);
+  let _encryptedUsername = await this.encrypt(_username);
+  let _encryptedPassword = await this.encrypt(_password);
 
-  // if (this.state.updateStatus) {
-  //   let _index = this.state.focusPwdIndex;
-  //   // pwdListDecryptedCopy[index] = newPassword;
-  //   await this.state.passwordManager.methods.updatePassword(_index, _domain, _username, _password).send({from: this.state.account});
-  // }else{
-  //   // pwdListDecryptedCopy.push(newPassword);
-  //   await this.state.passwordManager.methods.saveNewPassword(_domain, _username, _password).send({from: this.state.account});
-  // }
+  if (this.state.updateStatus) {
+    let _index = this.state.focusPwdIndex;
+    // pwdListDecryptedCopy[index] = newPassword;
+    await this.state.passwordManager.methods.updatePassword(_index, _encryptedDomain, _encryptedUsername, _encryptedPassword).send({from: this.state.account});
+  }else{
+
+    console.log(`domain: ${_encryptedDomain}`);
+    console.log(`Type ${typeof _domain}`);
+    console.log(`username: ${_encryptedUsername}`);
+    console.log(`Type ${typeof _encryptedUsername}`);
+    console.log(`password: ${_encryptedPassword}`);
+    console.log(`Type ${typeof _encryptedPassword}`);
+    console.log(`account: ${this.state.account}`);
+    // pwdListDecryptedCopy.push(newPassword);
+    let n = this.state.pwdListDecrypted.length - 1;
+    // console.log(`pwdListDecrypted domain: ${this.state.pwdListDecrypted[n].domain}`);
+    // console.log(`pwdListDecryptedCopy domain: ${pwdListDecryptedCopy[n].domain}`);
   
-  // this.setState({pwdListDecrypted: pwdListDecryptedCopy});
+    await this.state.passwordManager.methods.saveNewPassword(_encryptedDomain, _encryptedUsername, _encryptedPassword).send({from: this.state.account});
+
+  }
+  let newPwdListEncrypted = await this.state.passwordManager.methods.getPasswordList().call();
+  this.setState({pwdListEncrypted: newPwdListEncrypted});
+  // window.location.reload()
+
   this.resetFields();
-  // alert('Done! Password saved.');
+  alert('Done! Password saved.');
 
   }
 
@@ -274,11 +291,14 @@ render() {
   return (
     <div>
     <AppHeader/>
+
+    {/* Still working on buttons and testing. Work in progress  */}
     <MetaMaskConnectButton>{this.state.account ? this.state.account : 'No account'}</MetaMaskConnectButton> 
     {/* <ContractConnectButton /> */}
     <div className="Connect-Button">
     <OnboardingButton>{this.state.account ? this.state.account : 'No account'}</OnboardingButton>
     </div>
+
      <h2>Password List - Account {this.state.account ? this.state.account : '[No account connected]'}</h2>
       {/* <h3>{this.getOwner()}</h3> */}
 
@@ -335,15 +355,12 @@ class AppHeader extends React.Component {
 class MetaMaskConnectButton extends React.Component {
 
   async connectMM() {
+    
     let accounts = null;
     // const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     try {
        accounts = await window.ethereum.request({ method: 'eth_accounts' });
-    } catch (error) {
-      console.error(error);
-    }
-
-const account = accounts[0];
+       const account = accounts[0];
 console.log(account);
 const listener1 = window.ethereum.on('accountsChanged', (accounts) => {
   console.log('new account = ' +accounts[0]);
@@ -351,59 +368,22 @@ const listener1 = window.ethereum.on('accountsChanged', (accounts) => {
 });
 const listener2 = window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
 
+let connectButton = document.getElementById('connectMMButton')
+connectButton.innerHTML = (`Connected to ${account}`)
+    } catch (error) {
+      console.error(error);
+    }
+
+
+
   }
 
-  /* Get public encryption Key */
-  // let encryptionPublicKey;
-
-  // ethereum
-  //   .request({
-  //     method: 'eth_getEncryptionPublicKey',
-  //     params: [accounts[0]], // you must have access to the specified account
-  //   })
-  //   .then((result) => {
-  //     encryptionPublicKey = result;
-  //   })
-  //   .catch((error) => {
-  //     if (error.code === 4001) {
-  //       // EIP-1193 userRejectedRequest error
-  //       console.log("We can't encrypt anything without the key.");
-  //     } else {
-  //       console.error(error);
-  //     }
-  //   });
-
-  /* Encrypting */
-  // const ethUtil = require('ethereumjs-util');
-
-  // const encryptedMessage = ethUtil.bufferToHex(
-  //   Buffer.from(
-  //     JSON.stringify(
-  //       sigUtil.encrypt(
-  //         encryptionPublicKey,
-  //         { data: 'Hello world!' },
-  //         'x25519-xsalsa20-poly1305'
-  //       )
-  //     ),
-  //     'utf8'
-  //   )
-  // );
-
-  /* Decrypting */
-  // ethereum
-  // .request({
-  //   method: 'eth_decrypt',
-  //   params: [encryptedMessage, accounts[0]],
-  // })
-  // .then((decryptedMessage) =>
-  //   console.log('The decrypted message is:', decryptedMessage)
-  // )
-  // .catch((error) => console.log(error.message));
 
   render(){
+   
     return(
-    <Button onClick = {this.connectMM}>
-      Connect to MetaMask   
+    <Button id='connectMMButton' onClick = {this.connectMM}>
+     Connect to Metamask
     </Button>
     )
   }
@@ -413,8 +393,9 @@ const listener2 = window.ethereum.on('chainChanged', (_chainId) => window.locati
 class PWList extends React.Component {
 
   render(){
-    const numberOfPasswords = this.props.pwdListDecrypted.length;
     const pwdListDecrypted = this.props.pwdListDecrypted;
+    const numberOfPasswords = this.props.pwdListDecrypted.length;
+
     let index = 0;
       for (let p of pwdListDecrypted) {
         p.index = index;

@@ -25,7 +25,7 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
             assert.equal(owner, ownerAccount, 'The deployer is not the owner.')
         } );
 
-        it("should have an balance", async () => {
+        it("should have a balance", async () => {
             assert.equal(typeof passwordManager.balance, 'function', "the contract has no balance.");
           });
 
@@ -111,7 +111,7 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
             passwordList.length,
             // "There are no passwords to retrieve!",
             2,
-            "Password List length not the same as number of passwords saved bu user.",
+            "Password List length not the same as number of passwords saved by user.",
           );
         })
 
