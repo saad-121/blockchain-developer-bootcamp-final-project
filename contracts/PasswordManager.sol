@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @author SHHS
 /// @notice You can use this contract for only the most basic simulation
 /// @dev All function calls are currently implemented without side effects
+/// @dev Inherits OpenZeppelin's Ownable module
 contract PasswordManager is Ownable{
 
     //fallback function
@@ -25,15 +26,15 @@ contract PasswordManager is Ownable{
 
     //TODO Comments - Done: Added Natspec Format comments.
 
-    //TODO Use at least two design patterns from the "Smart Contracts" section
+    //TODO Use at least two design patterns from the "Smart Contracts" section - Done: Added to design_pattern_decisions.md
 
-    //TODO Protect against two attack vectors from the "Smart Contracts" section with its the SWC number
+    //TODO Protect against two attack vectors from the "Smart Contracts" section with its the SWC number - Done: Added to avoiding_common_attacks.md
 
     //TODO Inherits from at least one library or interface - Done: Inherits from Openzeppelin's Ownable
 
     //TODO Can be easily compiled, migrated and tested
-    //TODO Have at least five unit tests for your smart contract(s) that pass. 
-    //In the code, include a sentence or two explaining what the tests are covering their expected behavior.
+    //TODO Have at least five unit tests for your smart contract(s) that pass. - Done: Have six tests that pass.
+    //In the code, include a sentence or two explaining what the tests are covering their expected behavior. - Done: added comments to the tests.
 
     /* Events */
     /// @notice Event emitted when a password is saved
@@ -56,6 +57,10 @@ contract PasswordManager is Ownable{
     /// @return The balance of Eth in the contract (when the automatic getter function is called)
     uint public balance;
 
+    /// @notice Indicator of whether some functions did not complete
+    /// @dev Used to prevent re-entrancy attacks
+    bool public busy = false;
+
     //Create struct for passwords
     struct Password {
         string domain;
@@ -71,10 +76,19 @@ contract PasswordManager is Ownable{
     //     owner = msg.sender;
     // }
 
-    /* Modifiers - maybe? */
+    /* Modifiers*/
     modifier hasAPassword {
         require(passwords[msg.sender].length > 0, "There are no passwords to retrieve!");
         _;
+    }
+
+    /// @notice Check whether some functions did not complete
+    /// @dev Used to prevent re-entrancy attacks    
+    modifier cannotBeBusy {
+        require(!busy, "The previous request is still being processed!");
+        busy = true;
+        _;
+        busy = false;
     }
     
     //Removed this modifier after added OpenZeppelin
@@ -94,11 +108,12 @@ contract PasswordManager is Ownable{
 
     /// @notice Save new password to array of Password structs saved for address that called the function (msg.sender)
     /// @dev Function is payable
+    /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
     /// @param _domain The domain of the Password struct to be saved
     /// @param _username The username of the Password struct to be saved
     /// @param _password The password of the Password struct to be saved
     /// @return True once the save operation is complete
-    function saveNewPassword(string memory _domain, string memory _username, string memory _password) public payable returns (bool){
+    function saveNewPassword(string memory _domain, string memory _username, string memory _password) public payable cannotBeBusy returns (bool){
 
         //- Prepare passord
         Password memory encryptedPassword = Password({domain: _domain, username: _username, password: _password});
@@ -114,12 +129,13 @@ contract PasswordManager is Ownable{
 
     /// @notice Update password already saved in array of Password structs
     /// @dev The msg.sender address must have a Password struct saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
+    /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
     /// @param _index The index of the Password struct to be updated
     /// @param _updatedDomain The domain of the Password struct to be updated
     /// @param _updatedUsername The username of the Password struct to be updated
     /// @param _updatedPassword The password of the Password struct to be updated
     /// @return True once the update operation is complete
-    function updatePassword(uint _index, string memory _updatedDomain, string memory _updatedUsername, string memory _updatedPassword) public hasAPassword returns (bool){ 
+    function updatePassword(uint _index, string memory _updatedDomain, string memory _updatedUsername, string memory _updatedPassword) public hasAPassword cannotBeBusy returns (bool){ 
         //- ?Check if it exists in mapping (may be done at browser level)
         // require(passwords[msg.sender], "You do not have a password stored.");
 
@@ -133,9 +149,10 @@ contract PasswordManager is Ownable{
 
     /// @notice Delete password already saved in array of Password structs
     /// @dev The msg.sender address must have a Password struct saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
+    /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
     /// @param _index The index of the Password struct to be deleted
     /// @return True once the delete operation is complete
-    function deletePassword(uint _index) public hasAPassword returns (bool){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
+    function deletePassword(uint _index) public hasAPassword cannotBeBusy returns (bool){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
 
         //- ?Check if it exists in mapping (may be done at browser level)
         // require(passwords[msg.sender], "You do not have a password stored.");
@@ -159,10 +176,11 @@ contract PasswordManager is Ownable{
     //function to withdraw funds from contract - onlyOwner
     /// @notice Withdraw Eth from contract
     /// @dev Only the owner of the contract can withdraw
+    /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
     /// @dev Amount to withdraw cannot be more than balance in the contract
     /// @param _amountToWithdraw Amount of Eth (Wei) to be withdrawn from the contract
     /// @return True if the withdraw is successful
-    function withdraw(uint _amountToWithdraw) public payable onlyOwner returns (bool) {
+    function withdraw(uint _amountToWithdraw) public payable onlyOwner cannotBeBusy returns (bool) {
         require(_amountToWithdraw <= balance, "Insufficient balance!");
         balance -= _amountToWithdraw;
         (bool success, ) = msg.sender.call{value: _amountToWithdraw}("Withdrawal from Password Manager");
