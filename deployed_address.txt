@@ -1,0 +1,2 @@
+network : Ropsten
+testnet address : 0x3281b2011156eE2eE6972A1E1781e825b899D8DE
