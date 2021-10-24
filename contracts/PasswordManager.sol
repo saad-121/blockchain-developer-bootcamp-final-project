@@ -23,7 +23,7 @@ contract PasswordManager is Ownable{
     balance += msg.value;
     }
 
-    //TODO Comments
+    //TODO Comments - Done: Added Natspec Format comments.
 
     //TODO Use at least two design patterns from the "Smart Contracts" section
 
