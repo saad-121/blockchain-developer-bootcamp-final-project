@@ -12,8 +12,14 @@ The user can modify and/or delete stored password(s).
 
 This solution provides permanent decentralized storage of sensitive data (user's passwords). Being decentralized, this data is a lot less likely to be controlled by one or few entities and is easily accessible from virtually anywhere. Even though it is easily accessible, encrypting it with the user's public key means that they cannot be "read" or used by anyone but the user. The encryption they go through is the same encryption that ensures the security of the blockchain.
 
+## Installing dependencies
+npm install
 ## Directory structure
 
 ## Where the frontend project can be accessed
 
 ## How to populate the .env locally with your own information. 
+
+## Smart Contract Unit Tests
+
+Note: For smart contract unit tests, local testnet should be running on port: 7545.

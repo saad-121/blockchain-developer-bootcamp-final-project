@@ -12,26 +12,22 @@ import Button from './Button_Styled';
  
 class App extends React.Component {
 
-  async componentWillMount() {
-    await this.loadWeb3();
-    if (window.web3){
-    await this.loadContractData();
-    }
-  }
 
-  async loadWeb3() {
+  async componentWillMount() {
+    let web3;
+
     if(window.ethereum) {
-      window.web3 = new Web3(window.ethereum);
+      // window.web3 = new Web3(window.ethereum);
+      web3 = new Web3(window.ethereum);
+
       await window.ethereum.enable();
     } else if (window.web3) {
-      window.web3 = new Web3(window.web3.currentProvider);
+      // window.web3 = new Web3(window.web3.currentProvider);
+      web3 = new Web3(window.web3.currentProvider);
+
     } else {
       window.alert('Non-Ethereum browser detected. You should consider installing MetaMask!')
     }
-  }
-
-  async loadContractData() {
-    const web3 = window.web3;
 
     const accounts = await web3.eth.getAccounts();
     this.setState({account: accounts[0]});
