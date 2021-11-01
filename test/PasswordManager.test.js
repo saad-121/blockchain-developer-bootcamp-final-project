@@ -1,7 +1,52 @@
+// require('dotenv').config();
+// // const crypto = require('crypto')
+// // var Wallet = require('ethereumjs-wallet');
+// const util = require('ethereumjs-util')
+// var EthUtil = require('ethereumjs-util');
+// const {bufferToHex} = require('ethereumjs-util');
+// const {encrypt} = require('eth-sig-util');
+
 const PasswordManager = artifacts.require("PasswordManager");
+
+    
 
 
 contract('PasswordManager', ([ownerAccount, client1, client2]) => {
+
+    // const privateKey = process.env.PRIVATE_KEY;
+    // console.log(privateKey + "   " + privateKey.length);
+
+    // const privateKeyBuffer = EthUtil.toBuffer(privateKey);
+
+    // const encryptionPublicKey = util.privateToPublic(privateKeyBuffer);                                                                                                                                                                                                                                                             
+
+ 
+    // console.log(encryptionPublicKey)  
+
+    // function testEncrypt(content) {
+
+    //     const encr = encrypt(
+    //         encryptionPublicKey,
+    //         { data: content },
+    //         'x25519-xsalsa20-poly1305'
+    //       )
+    //     const encryptedMessage = bufferToHex(
+    //       Buffer.from(
+    //         JSON.stringify(
+    //           encrypt(
+    //             encryptionPublicKey,
+    //             { data: content },
+    //             'x25519-xsalsa20-poly1305'
+    //           )
+    //         ),
+    //         'utf8'
+    //       )
+    //     );
+    //     return encryptedMessage;
+    //     }
+
+
+
     let passwordManager;
     const domain1 = "0x646f6d61696e3100000000000000000000000000000000000000000000000000";
     const username1 = "0x757365726e616d65310000000000000000000000000000000000000000000000";
@@ -9,7 +54,8 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
     const domain2 = "0x646f6d61696e3200000000000000000000000000000000000000000000000000";
     const username2 = "0x757365726e616d65320000000000000000000000000000000000000000000000";
     const password2 = "0x70617373776f7264320000000000000000000000000000000000000000000000";
-    
+
+
 
     before(async () => {
         passwordManager = await PasswordManager.new()
@@ -23,7 +69,7 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
         it("should have an owner", async () => {
             assert.equal(typeof passwordManager.owner, 'function', "the contract has no owner.");
           });
-        // This test checks if the owner if the contract is the address that deployed the contract.
+        // This test checks if the owner of the contract is the address that deployed the contract.
         // The test should pass.
         it('owner is deployer of contract (account[0])', async () => {
             const owner = await passwordManager.owner()
@@ -46,7 +92,8 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
 
 
     describe('saveNewPassword function', async () => {
-        // This test checks if users can save new passwords. If a password is saved, result will be true and the domain of the password struct retrieved will equal domain1.
+        // This test checks if users can save new passwords. 
+        //If a password is saved, result will be true and the domain of the password struct retrieved will equal domain1.
         // The test should pass.
         it("should allow users to store new passwords to password list", async () => {
             
@@ -56,11 +103,11 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
     //  });
     //         const passwordList =  await passwordManager.getPasswordList({ from: client1
     //  });
-    const result = await passwordManager.saveNewPassword(domain1, username1, password1, {from: ownerAccount
+    const result = await passwordManager.saveNewPassword(password1, {from: client1
     });
-           const result2 = await passwordManager.saveNewPassword(domain2, username2, password2, {from: ownerAccount
+           const result2 = await passwordManager.saveNewPassword(password2, {from: client1
     });
-           const passwordList =  await passwordManager.getPasswordList({ from: ownerAccount
+           const passwordList =  await passwordManager.getPasswordList({ from: client1
     });
 
             
@@ -69,7 +116,7 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
             );
 
             console.log(passwordList)
-            console.log(passwordList[0].domain)
+            console.log(passwordList[0])
         
     //         assert.equal(passwordList[0],
     //             // [{domain1, username1, password1}],
@@ -78,25 +125,24 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
     // password: '0x70617373776f7264310000000000000000000000000000000000000000000000'}],
     //             "Passwords are not stored in a list",
     //           );
-              assert.equal(passwordList[0].domain,
-                domain1,
+              assert.equal(passwordList[0],
+                password1,
                 "Passwords are not stored in a list",
               );
         })
     })
 
     describe('deletePassword function', async () => {
-        // This test checks that the length of the passwords array is equal to the number of passwords saved. The test saves two passwords and checks that the password list contains two passwords.
+        // This test checks if users can delete passwords. If a password is delted, the password list length should be less by one.
         // The test should pass.
         it("should allow users to delete passwords saved.", async () => {
-            const result = await passwordManager.deletePassword(1, {from: ownerAccount});
+            const result = await passwordManager.deletePassword(1, {from: client1});
     //         const result2 = await passwordManager.deletePassword(0, {from: client1
     //  });
-            const passwordList = await passwordManager.getPasswordList({ from: ownerAccount});
+            const passwordList = await passwordManager.getPasswordList({ from: client1});
 
         assert.equal(
             passwordList.length,
-            // "There are no passwords to retrieve!",
             1,
             "Passwords could not be deleted.",
           );
@@ -104,14 +150,16 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
     })
 
     describe('getPasswordList function', async () => {
-        // This test checks that the length of the passwords array is equal to the number of passwords saved. The test saves two passwords and checks that the password list contains two passwords.
+        // This test checks that users can retrieve the list of passwords they stored. 
+        // This is confirmed if the length of the passwords array is equal to the number of passwords saved. 
+        //The test saves two passwords and checks that the password list contains two passwords.
         // The test should pass.
         it("Password List length should equal number of passwords saved.", async () => {
-            const result = await passwordManager.saveNewPassword(domain1, username1, password1, {from: ownerAccount
+            const result = await passwordManager.saveNewPassword(password1, {from: client1
      });
-            const result2 = await passwordManager.saveNewPassword(domain2, username2, password2, {from: ownerAccount
+            const result2 = await passwordManager.saveNewPassword(password2, {from: client1
      });
-            const passwordList = await passwordManager.getPasswordList({ from: ownerAccount
+            const passwordList = await passwordManager.getPasswordList({ from: client1
      });
 
         assert.equal(
@@ -122,10 +170,11 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
             "Password List length not the same as number of passwords saved by user.",
           );
         })
-        // This test checks that each user has access only to their password list. The test saves one password for client 2 and checks that their password list contains 1 password (not 2 passwords).
+        // This test checks that each user has access only to their password list. 
+        //The test saves one password for client 2 and checks that their password list contains 1 password (not 2 passwords).
         // The test should pass.
         it("Each user should only have access to their password list.", async () => {
-            const result = await passwordManager.saveNewPassword(domain1, username1, password1, {from: client2 });
+            const result = await passwordManager.saveNewPassword(password1, {from: client2 });
             // const result2 = await passwordManager.saveNewPassword(domain2, username2, password2, {from: client2 });
             const passwordList = await passwordManager.getPasswordList({ from: client2 });
 

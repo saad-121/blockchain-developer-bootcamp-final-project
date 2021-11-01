@@ -38,17 +38,17 @@ contract PasswordManager is Ownable{
 
     /* Events */
     /// @notice Event emitted when a password is saved
-    /// @param sender The address of the msg.sender who saved the password
-    /// @param pw The password that was saved
-    event PasswordSaved(address indexed sender, Password pw);
+    /// @param savedBy The address of the msg.sender who saved the password
+    /// @param password The password that was saved
+    event PasswordSaved(address indexed savedBy, string password);
 
     /// @notice Event emitted when a password is deleted
-    /// @param sender The address of the msg.sender who deleted the password
-    event PasswordDeleted(address indexed sender);
+    /// @param deletedBy The address of the msg.sender who deleted the password
+    event PasswordDeleted(address indexed deletedBy);
 
     /// @notice Event emitted when a password is updated
-    /// @param sender The address of the msg.sender who updated the password
-    event PasswordUpdated(address indexed sender);
+    /// @param updatedBy The address of the msg.sender who updated the password
+    event PasswordUpdated(address indexed updatedBy);
 
     // address public owner;
 
@@ -61,20 +61,10 @@ contract PasswordManager is Ownable{
     /// @dev Used to prevent re-entrancy attacks
     bool public busy = false;
 
-    //Create struct for passwords
-    struct Password {
-        string domain;
-        string username;
-        string password;
-    }
 
     //Have mapping for storing passwords
-    mapping(address => Password[]) private passwords;
+    mapping(address => string[]) private passwords;
 
-
-    // constructor() {
-    //     owner = msg.sender;
-    // }
 
     /* Modifiers*/
     modifier hasAPassword {
@@ -97,49 +87,41 @@ contract PasswordManager is Ownable{
     //     _;
     // }
 
-    /// @notice Retrieve array of passwords (Password structs) saved for address that called the function (msg.sender)
-    /// @dev The msg.sender address must have a Password struct saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
-    /// @return Array of Password structs saved for address that called the function (msg.sender)
-    function getPasswordList() public view hasAPassword returns (Password[] memory){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
+    /// @notice Retrieve array of passwords saved for address that called the function (msg.sender)
+    /// @dev The msg.sender address must have password(s) saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
+    /// @return Array of passwords saved for address that called the function (msg.sender)
+    function getPasswordList() public view hasAPassword returns (string[] memory){
 
         //return password list
         return passwords[msg.sender];
     }
 
-    /// @notice Save new password to array of Password structs saved for address that called the function (msg.sender)
+    /// @notice Save new password to array of passwords saved for address that called the function (msg.sender)
     /// @dev Function is payable
     /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
-    /// @param _domain The domain of the Password struct to be saved
-    /// @param _username The username of the Password struct to be saved
-    /// @param _password The password of the Password struct to be saved
+    /// @param _password The new encrypted password to be saved
     /// @return True once the save operation is complete
-    function saveNewPassword(string memory _domain, string memory _username, string memory _password) public payable cannotBeBusy returns (bool){
-
-        //- Prepare passord
-        Password memory encryptedPassword = Password({domain: _domain, username: _username, password: _password});
+    function saveNewPassword(string memory _password) public payable cannotBeBusy returns (bool){
 
         //add to passwords mapping
-        passwords[msg.sender].push(encryptedPassword);
+        passwords[msg.sender].push(_password);
 
-        emit PasswordSaved(msg.sender, encryptedPassword);
+        emit PasswordSaved(msg.sender, _password);
 
         //return true
         return true;
     }
 
     /// @notice Update password already saved in array of Password structs
-    /// @dev The msg.sender address must have a Password struct saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
+    /// @dev The msg.sender address must have passwords saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
     /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
-    /// @param _index The index of the Password struct to be updated
-    /// @param _updatedDomain The domain of the Password struct to be updated
-    /// @param _updatedUsername The username of the Password struct to be updated
-    /// @param _updatedPassword The password of the Password struct to be updated
+    /// @param _index The index of the password to be updated
+    /// @param _updatedPassword The encrypted password to be updated
     /// @return True once the update operation is complete
-    function updatePassword(uint _index, string memory _updatedDomain, string memory _updatedUsername, string memory _updatedPassword) public hasAPassword cannotBeBusy returns (bool){ 
-        //- ?Check if it exists in mapping (may be done at browser level)
-        // require(passwords[msg.sender], "You do not have a password stored.");
+    function updatePassword(uint _index, string memory _updatedPassword) public hasAPassword cannotBeBusy returns (bool){ 
 
-        passwords[msg.sender][_index] = Password({domain: _updatedDomain, username: _updatedUsername, password: _updatedPassword});
+        //update password
+        passwords[msg.sender][_index] = _updatedPassword;
 
         emit PasswordUpdated(msg.sender);
         
@@ -147,15 +129,13 @@ contract PasswordManager is Ownable{
         return true;
     }
 
-    /// @notice Delete password already saved in array of Password structs
-    /// @dev The msg.sender address must have a Password struct saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
+    /// @notice Delete password already saved in array of passwords
+    /// @dev The msg.sender address must have passwords saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
     /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
     /// @param _index The index of the Password struct to be deleted
     /// @return True once the delete operation is complete
     function deletePassword(uint _index) public hasAPassword cannotBeBusy returns (bool){ //not sure yet whether to use the Password struct or to break it down into its components as arguments 
 
-        //- ?Check if it exists in mapping (may be done at browser level)
-        // require(passwords[msg.sender], "You do not have a password stored.");
         
         uint l = passwords[msg.sender].length;
         
