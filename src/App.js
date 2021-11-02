@@ -20,6 +20,7 @@ class App extends React.Component {
       passwordManager: '',
       encryptionPublicKey: '',
       pwdListEncrypted: [],
+      pwdListTemporary: [],
       pwdListDecrypted: [],
       contractOwner: '',
       focusPwdIndex: null,
@@ -69,7 +70,8 @@ class App extends React.Component {
     const accounts = await web3.eth.getAccounts();
     this.setState({account: accounts[0]});
     window.ethereum.on('accountsChanged', (accounts) => {
-      this.setState({account: accounts[0]});
+      // this.setState({account: accounts[0]});
+      window.location.reload();
       // this.render();
     });
     window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
@@ -87,7 +89,18 @@ class App extends React.Component {
 
       // let saveEvent = passwordManager.events.allEvents({filter: {ReturnValues: this.state.account}, fromBlock: 0, toBlock: 'latest'}, (error, event) => { console.log(event); this.render() });
 
-
+      let anyEvent = this.state.passwordManager.events.allEvents({filter: {$0: this.state.account}}/*, function(error, event){ console.log(event); }*/)
+      .on('data', async (event) => {
+        let announce = `${event.event} was emitted by \n${event.returnValues[0]}`
+          alert(announce); 
+          this.flipLoading();
+          await this.getPasswordList();
+          this.flipLoading();
+      })
+      .on('changed', function(event){
+          // remove event from local database
+      })
+      .on('error', console.error);
 
 
 
@@ -96,8 +109,8 @@ class App extends React.Component {
                   
          
         await this.getPasswordList();
-        console.log("Enc: " + this.state.pwdListEncrypted);
-        await this.getDecryptedList();
+        // console.log("Enc: " + this.state.pwdListEncrypted);
+
 
         console.log(this.state.pwdListDecrypted);
         console.log(this.state.pwdListDecrypted.length);
@@ -112,53 +125,28 @@ class App extends React.Component {
     }
     }
 
-async getDecryptedList() {
-  let newList = await this.state.pwdListEncrypted.map(async (pwd) => 
-  {
-    let decPwd = await this.decrypt(pwd);
-    console.log("decPWD: " + decPwd)
-    
-    console.log("decPWD.domain: " + decPwd.domain)
-    this.setState({pwdListDecrypted: [...this.state.pwdListDecrypted, decPwd]});
-  });
-  console.log(newList);
-  console.log(newList.length);
-  console.log(newList[0].domain);
-    
 
-}
   async getPasswordList() {
 
+    this.setState({pwdListDecrypted:[]});
+    // this.setState({pwdListTemporary: []});
           //Because of the design of the contract, you have to specify 'from' address; otherwise will revert because of modifier.
-        // let pwdListEncrypted = await this.state.passwordManager.methods.getPasswordList().call({from: this.state.account})
-        // let newPwdListDecrypted = await this.state.passwordManager.methods.getPasswordList().call({from: this.state.account})
-        //   .then( async (pwdListEncrypted) => {
-
-          // let pwdListEncrypted = await this.state.passwordManager.methods.getPasswordList().call({from: this.state.account})
-          // let pwdListDecrypted = await this.state.pwdListEncrypted.map( (pwd) =>  this.decrypt(pwd));
-
           let pwdListEncrypted = await this.state.passwordManager.methods.getPasswordList().call({from: this.state.account})//.map( (pwd) =>  this.decrypt(pwd));
           
 
           // this.setState({pwdListEncrypted, loading: false});
 
           
-          await pwdListEncrypted.map(async (pwd) => 
+          await pwdListEncrypted.forEach(async (pwd) => 
           {
             let decryptedPwd = await this.decrypt(pwd);
-            console.log("decryptedPWD: " + decryptedPwd)
+            // console.log("decryptedPWD: " + decryptedPwd)
             
-            console.log("decryptedPWD.domain: " + decryptedPwd.domain)
+            // console.log("decryptedPWD.domain: " + decryptedPwd.domain)
             this.setState({pwdListDecrypted: [...this.state.pwdListDecrypted, decryptedPwd]});
           });
 
-          //   await pwdListEncrypted.map( (pwd) =>  this.decrypt(pwd))
-          // })
-          // // .then((newPwdListDecrypted) => 
-          // this.setState({pwdListDecrypted: newPwdListDecrypted, loading: false});
-          // )
-          
-          
+          // this.setState({pwdListDecrypted: this.state.pwdListTemporary})
   }
 
   async getEncryptionKey() {
@@ -186,9 +174,9 @@ async getDecryptedList() {
   }
 
 
-  async  decrypt(encryptedContent){
+    decrypt(encryptedContent){
     /* Decrypting */
-   const decryptedResult = await window.ethereum
+   const decryptedResult =  window.ethereum
     .request({
       method: 'eth_decrypt',
       params: [encryptedContent, this.state.account],
@@ -263,21 +251,13 @@ async getDecryptedList() {
 
 
   async deletePassword(_index) {
-    try{
+
     const passwordDeleted = await this.state.passwordManager.methods.deletePassword(_index).send({ from: this.state.account});
     console.log(passwordDeleted);
    
                   
          
-      await this.getPasswordList();
-
-      let pwdListDecrypted = await this.state.pwdListEncrypted.map( (pwd) =>  this.decrypt(pwd));;
-      this.setState({pwdListDecrypted});
-          console.log(this.state.pwdListDecrypted);
-
-      } catch(error) {
-        console.log(error);
-      }
+      // await this.getPasswordList();
 
   }
 
@@ -313,7 +293,7 @@ async getDecryptedList() {
   let _encryptedPassword = this.encrypt(newPassword);
   console.log(`_encryptedPassword: ${_encryptedPassword}`);
   
-  try{
+
 
   if (this.state.updateStatus) {
     let _index = this.state.focusPwdIndex;
@@ -325,23 +305,15 @@ async getDecryptedList() {
   }
   
          
-      await this.getPasswordList();
+      // await this.getPasswordList();
 
-      let pwdListDecrypted = await this.state.pwdListEncrypted.map( (pwd) =>  this.decrypt(pwd));
-      this.setState({pwdListDecrypted});
-          console.log(this.state.pwdListDecrypted);
 
-      } catch(error) {
-        console.log(error);
-      }
+
+
 
   this.resetFields();
-  // let saveEvent = this.state.passwordManager.events.PasswordSaved({filter: {from: this.state.account}}, (error, event) => { 
-  //   console.log(event); this.render()})
 
-  alert('Done! Password saved.');
 
-  // this.setState({loading: false});
  
   }
 
@@ -544,7 +516,7 @@ class PWList extends React.Component {
           />
           ); 
 
-          console.log("List: " + pwdListDecrypted);
+          // console.log("List: " + pwdListDecrypted);
         return(
           <div>
           <h3>{numberOfPasswords > 0 ? "No of passwords: " + numberOfPasswords : "No saved passwords."} </h3>
