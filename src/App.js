@@ -29,7 +29,8 @@ class App extends React.Component {
       focusPwdPassword: '',
       updateStatus: false,
       loading: false,
-      
+      isBusy: false,
+ 
   };
 
   this.getPasswordList = this.getPasswordList.bind(this);
@@ -41,8 +42,15 @@ class App extends React.Component {
     this.resetFields = this.resetFields.bind(this);
     this.flipLoading = this.flipLoading.bind(this);
 
+    this.setBusy = this.setBusy.bind(this);
+
   }
 
+  setBusy() {
+    this.setState({isBusy: true})
+  }
+
+  
   flipLoading() {
     let flipLoading = !this.state.loading;
     this.setState({loading: flipLoading});
@@ -95,6 +103,7 @@ class App extends React.Component {
           alert(announce); 
           this.flipLoading();
           await this.getPasswordList();
+          this.setState({isBusy: false});
           this.flipLoading();
       })
       .on('changed', function(event){
@@ -273,6 +282,7 @@ class App extends React.Component {
 
     if (!_domain || !_password) {
       alert('You need to provide at least a domain and a password.');
+      this.setState({isBusy: false});
       return "";
     }
 
@@ -281,6 +291,7 @@ class App extends React.Component {
     for (let p of this.state.pwdListDecrypted) {
       if (p.domain === _domain && p.username === _username && p.password === _password) {
         alert('You already have this password saved.');
+        this.setState({isBusy: false});
         return "";
       }
     }
@@ -333,29 +344,29 @@ render() {
   console.log(this.state.pwdListDecrypted.length);
   console.log(this.state.pwdListDecrypted[0]);
 
-  const displayAndUpdateList =     (
-    <>
-    <PWList id='pwdList'
-    pwdListDecrypted = {this.state.pwdListDecrypted}
-    prepareToUpdate = {this.prepareToUpdate}
-    deletePassword = {this.deletePassword}
-    loading = {this.state.loading}
-    />
+  // const displayAndUpdateList =     (
+  //   <>
+  //   <PWList id='pwdList'
+  //   pwdListDecrypted = {this.state.pwdListDecrypted}
+  //   prepareToUpdate = {this.prepareToUpdate}
+  //   deletePassword = {this.deletePassword}
+  //   loading = {this.state.loading}
+  //   />
 
-  {this.state.updateStatus ? <h2>Update Password</h2> : <h2>Add new Password</h2>}
+  // {this.state.updateStatus ? <h2>Update Password</h2> : <h2>Add new Password</h2>}
 
-    <AddOrUpdatePWD
-      flipLoading = {this.flipLoading}
-      focusPwdIndex = {this.state.focusPwdIndex}
-      focusPwdDomain = {this.state.focusPwdDomain}
-      focusPwdUsername = {this.state.focusPwdUsername}
-      focusPwdPassword = {this.state.focusPwdPassword}
-      updateParam = {this.updateParam}
-      savePassword = {this.savePassword} 
-      resetFields = {this.resetFields}
-      />
-      </>
-    )
+  //   <AddOrUpdatePWD
+  //     flipLoading = {this.flipLoading}
+  //     focusPwdIndex = {this.state.focusPwdIndex}
+  //     focusPwdDomain = {this.state.focusPwdDomain}
+  //     focusPwdUsername = {this.state.focusPwdUsername}
+  //     focusPwdPassword = {this.state.focusPwdPassword}
+  //     updateParam = {this.updateParam}
+  //     savePassword = {this.savePassword} 
+  //     resetFields = {this.resetFields}
+  //     />
+  //     </>
+  //   )
   return (
     <div>
     <AppHeader/>
@@ -374,6 +385,8 @@ render() {
     "Loading password list.....":  (
       <>
       <PWList id='pwdList'
+                setBusy = {this.setBusy}
+                isBusy = {this.state.isBusy}
       pwdListDecrypted = {this.state.pwdListDecrypted}
       prepareToUpdate = {this.prepareToUpdate}
       deletePassword = {this.deletePassword}
@@ -383,6 +396,8 @@ render() {
     {this.state.updateStatus ? <h2>Update Password</h2> : <h2>Add new Password</h2>}
   
       <AddOrUpdatePWD
+                setBusy = {this.setBusy}
+                isBusy = {this.state.isBusy}
         flipLoading = {this.flipLoading}
         focusPwdIndex = {this.state.focusPwdIndex}
         focusPwdDomain = {this.state.focusPwdDomain}
@@ -474,23 +489,6 @@ connectButton.innerHTML = (`Connected to ${account}`)
 
 /* Password List Class */
 class PWList extends React.Component {
-  // constructor(props) {
-  //   super(props);
-  //   this.state = {
-  //     loading: true
-  //   }
-  // }
-
-  async componentDidMount(){
-
-
-
-    // if (numberOfPasswords != this.props.pwdListDecrypted.length) {
-    // let pwdListDecrypted = this.props.pwdListEncrypted.map((pwd) => this.props.decrypt(pwd));
-    // this.setState({pwdListDecrypted});
-    // }
-
-  }
 
   render(){
 
@@ -505,7 +503,9 @@ class PWList extends React.Component {
     const passwords = pwdListDecrypted.map((pwd) =>
     
           < DisplayPW
-          
+          setBusy = {this.props.setBusy}
+          isBusy = {this.props.isBusy}
+
           flipLoading = {this.props.flipLoading}
 
           key = {pwd.index}
@@ -533,12 +533,15 @@ class PWList extends React.Component {
 class DisplayPW extends React.Component {
   constructor(props) {
     super(props);
+
     this.handleUpdate = this.handleUpdate.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
   }
 
     handleUpdate(e) {
       e.preventDefault();
+      // let updateButton = document.getElementById('updateButton');
+      // updateButton.disabled = true;
     this.props.prepareToUpdate(this.props.pwd.index);
 
   }
@@ -546,6 +549,7 @@ class DisplayPW extends React.Component {
     handleDelete(e) {
       e.preventDefault();
  
+      this.props.setBusy();
       this.props.deletePassword(this.props.pwd.index);
      
 
@@ -570,10 +574,10 @@ class DisplayPW extends React.Component {
 
           
           {/* <input type="submit" value="Update" /> */}
-          <Button type="submit">
+          <Button id='updateButton' type="submit" disabled = {this.props.isBusy}>
             Update
             </Button>
-          <Button onClick={this.handleDelete}>
+          <Button id='deleteButton' onClick={this.handleDelete} disabled = {this.props.isBusy}>
           Delete
           </Button>
         </form>
@@ -595,7 +599,11 @@ class AddOrUpdatePWD extends React.Component {
   }
 
     handleSave(e) {
+      // let saveButton = document.getElementById('saveButton');
+      // saveButton.disabled = true;
+      this.props.setBusy();
     this.props.savePassword(e);
+
   }
 
       handleCancel(e) {
@@ -626,11 +634,11 @@ class AddOrUpdatePWD extends React.Component {
          </label>
 
       {/* <input type="submit" value="Save" /> */}
-      <Button onClick={this.handleSave} >
+      <Button id='saveButton' onClick={this.handleSave} disabled = {this.props.isBusy}>
           Save
           </Button>
 
-                <Button onClick={this.handleCancel}>
+                <Button id='cancelButton' onClick={this.handleCancel} disabled = {this.props.isBusy}>
           Cancel
           </Button>
       </form>
