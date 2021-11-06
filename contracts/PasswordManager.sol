@@ -80,12 +80,6 @@ contract PasswordManager is Ownable{
         _;
         busy = false;
     }
-    
-    //Removed this modifier after added OpenZeppelin
-    // modifier onlyOwner {
-    //     require(msg.sender == owner, "Only the owner can access this function!");
-    //     _;
-    // }
 
     /// @notice Retrieve array of passwords saved for address that called the function (msg.sender)
     /// @dev The msg.sender address must have password(s) saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.

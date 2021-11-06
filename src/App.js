@@ -84,6 +84,7 @@ class App extends React.Component {
     });
     window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
 
+
     // Get contract
     const networkID = await web3.eth.net.getId();
 
@@ -358,6 +359,10 @@ render() {
   console.log(this.state.pwdListDecrypted.length);
   console.log(this.state.pwdListDecrypted[0]);
 
+let first = this.state.account.slice(0, 4)
+let last = this.state.account.slice(-4)
+// let l = this.state.account.length-1;
+// let b = this.state.account[l];
   // const displayAndUpdateList =     (
   //   <>
   //   <PWList id='pwdList'
@@ -386,13 +391,14 @@ render() {
     <AppHeader/>
 
     {/* Still working on buttons and testing. Work in progress  */}
-    <MetaMaskConnectButton account = {this.state.account}/>
+    {/* <MetaMaskConnectButton account = {this.state.account}/> */}
     {/* <ContractConnectButton /> */}
-    {/* <div className="Connect-Button">
-    <OnboardingButton>{this.state.account ? this.state.account : 'No account'}</OnboardingButton>
-    </div> */}
+    {/* <div className="Connect-Button"> */}
+    <OnboardingButton
+    />
+    {/* </div> */}
 
-     <h2>Password List - Account {this.state.account ? this.state.account : '[No account connected]'}</h2>
+     <h2>Password List - Account {this.state.account ? first+'...'+last/*this.state.account*/ : '[No account connected]'}</h2>
       {/* <h3>{this.getOwner()}</h3> */}
 
     {this.state.loading ?
