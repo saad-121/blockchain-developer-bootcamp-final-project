@@ -125,7 +125,10 @@ class App extends React.Component {
       .on('changed', function(event){
           // remove event from local database
       })
-      .on('error', console.error);
+      .on('error', ( (error) => {
+        console.error(error);
+        this.setState({isBusy: false});
+        }))
 
 
 
@@ -143,6 +146,8 @@ class App extends React.Component {
 
         } catch(error) {
           console.log(error);
+                  this.setState({isBusy: false});
+
         }
     } 
     else {
@@ -154,7 +159,8 @@ class App extends React.Component {
   async getPasswordList() {
 
     this.setState({pwdListDecrypted:[]});
-    // this.setState({pwdListTemporary: []});
+
+    try {
           //Because of the design of the contract, you have to specify 'from' address; otherwise will revert because of modifier.
           let pwdListEncrypted = await this.state.passwordManager.methods.getPasswordList().call({from: this.state.account})//.map( (pwd) =>  this.decrypt(pwd));
           
@@ -171,7 +177,10 @@ class App extends React.Component {
             this.setState({pwdListDecrypted: [...this.state.pwdListDecrypted, decryptedPwd]});
           });
 
-          // this.setState({pwdListDecrypted: this.state.pwdListTemporary})
+} catch (error) {
+  console.log(error);
+  this.setState({isBusy: false});
+}
   }
 
   async getEncryptionKey() {
@@ -276,9 +285,14 @@ class App extends React.Component {
 
 
   async deletePassword(_index) {
-
+        try{
     const passwordDeleted = await this.state.passwordManager.methods.deletePassword(_index).send({ from: this.state.account});
-    console.log(passwordDeleted);
+        console.log(passwordDeleted);
+
+      } catch(error) {
+        console.log(error);
+        this.setState({isBusy: false});
+      }
    
                   
          
@@ -315,20 +329,42 @@ class App extends React.Component {
     let newPassword = JSON.stringify(_newPassword);
 
           // /* Get public encryption Key */
-          if (!this.state.encryptionPublicKey) await this.getEncryptionKey();
+          if (!this.state.encryptionPublicKey) {
 
+                  try{
+await this.getEncryptionKey();      
+} catch(error) {
+        console.log(error);
+        alert('The encryption key is needed to save passwords.');
+        this.setState({isBusy: false});
+      }
+          }
   let _encryptedPassword = this.encrypt(newPassword);
   console.log(`_encryptedPassword: ${_encryptedPassword}`);
   
 
+this.setState({isBusy: true});
 
   if (this.state.updateStatus) {
     let _index = this.state.focusPwdIndex;
-    await this.state.passwordManager.methods.updatePassword(_index, _encryptedPassword).send({from: this.state.account});
+    
+        try{
+    const passwordUpdated = await this.state.passwordManager.methods.updatePassword(_index, _encryptedPassword).send({from: this.state.account});
+    console.log(passwordUpdated);
+      } catch(error) {
+        console.log(error);
+        this.setState({isBusy: false});
+      }
 
   }else{
+    try{
+      const passwordSaved = await this.state.passwordManager.methods.saveNewPassword(_encryptedPassword).send({from: this.state.account});
+          console.log(passwordSaved);
 
-    await this.state.passwordManager.methods.saveNewPassword(_encryptedPassword).send({from: this.state.account});
+      } catch(error) {
+        console.log(error);
+        this.setState({isBusy: false});
+      }
   }
   
          
