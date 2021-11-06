@@ -71,7 +71,8 @@ class App extends React.Component {
     } else if (window.web3) {
       web3 = new Web3(window.web3.currentProvider);
     } else {
-      window.alert('Non-Ethereum browser detected. You should consider installing MetaMask!')
+      window.alert('Non-Ethereum browser detected. You should consider installing MetaMask!');
+      return
     }
 
     // Get user account
