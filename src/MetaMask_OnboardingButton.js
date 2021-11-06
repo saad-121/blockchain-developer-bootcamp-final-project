@@ -6,7 +6,7 @@ const ONBOARD_TEXT = 'Click here to install MetaMask!';
 const CONNECT_TEXT = 'Connect Wallet';
 const CONNECTED_TEXT = 'Wallet Connected';
 
-export function OnboardingButton() {
+export function OnboardingButton(props) {
   const [buttonText, setButtonText] = React.useState(ONBOARD_TEXT);
   const [isDisabled, setDisabled] = React.useState(false);
   const [accounts, setAccounts] = React.useState([]);

@@ -99,7 +99,21 @@ class App extends React.Component {
 
       let anyEvent = this.state.passwordManager.events.allEvents({filter: {$0: this.state.account}}/*, function(error, event){ console.log(event); }*/)
       .on('data', async (event) => {
-        let announce = `${event.event} was emitted by \n${event.returnValues[0]}`
+        // let announce = `${event.event} was emitted by \n${event.returnValues[0]}`
+        let announce;
+        switch(event.event) {
+          case "PasswordSaved":
+            announce = 'Congratulations! Your password was saved on the blockchain.'
+            break;
+          case 'PasswordUpdated':
+            announce = 'Congratulations! Your password was updated on the blockchain.'
+            break;
+          case 'PasswordDeleted':
+          announce = 'Your password has been deleted.'
+          break;
+          default:
+            announce = `${event.event} was emitted by \n${event.returnValues[0]}`
+        }
           alert(announce); 
           this.flipLoading();
           await this.getPasswordList();
