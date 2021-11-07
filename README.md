@@ -19,7 +19,7 @@ npm install
 ## Where the frontend project can be accessed
 
 ## How to populate the .env locally with your own information. 
-
+Fill out the keys and addresses in the ".env.example" file and rename the file to ".env"
 ## Smart Contract Unit Tests
-
+Go to the root directory of this project and run 'truffle test' on the terminal.
 Note: For smart contract unit tests, local testnet should be running on port: 7545.

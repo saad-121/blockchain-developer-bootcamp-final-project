@@ -39,8 +39,7 @@ contract PasswordManager is Ownable{
     /* Events */
     /// @notice Event emitted when a password is saved
     /// @param savedBy The address of the msg.sender who saved the password
-    /// @param password The password that was saved
-    event PasswordSaved(address indexed savedBy, string password);
+    event PasswordSaved(address indexed savedBy);
 
     /// @notice Event emitted when a password is deleted
     /// @param deletedBy The address of the msg.sender who deleted the password
@@ -62,8 +61,17 @@ contract PasswordManager is Ownable{
     bool public busy = false;
 
 
-    //Have mapping for storing passwords
-    mapping(address => string[]) private passwords;
+    //Mpping for storing passwords
+    mapping(address => Password[]) private passwords;
+
+
+    //Struct for storing passwords
+    //Contains a string with unencrypted Domain
+    //Contains a string with encrypted username and password
+    struct Password{
+        string unencryptedPart;
+        string encryptedPart;
+    }
 
 
     /* Modifiers*/
@@ -84,7 +92,7 @@ contract PasswordManager is Ownable{
     /// @notice Retrieve array of passwords saved for address that called the function (msg.sender)
     /// @dev The msg.sender address must have password(s) saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
     /// @return Array of passwords saved for address that called the function (msg.sender)
-    function getPasswordList() public view hasAPassword returns (string[] memory){
+    function getPasswordList() public view hasAPassword returns (Password[] memory){
 
         //return password list
         return passwords[msg.sender];
@@ -93,14 +101,18 @@ contract PasswordManager is Ownable{
     /// @notice Save new password to array of passwords saved for address that called the function (msg.sender)
     /// @dev Function is payable
     /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
-    /// @param _password The new encrypted password to be saved
+    /// @param _unencryptedPart The new unencrypted part of the password to be saved
+    /// @param _encryptedPart The new encrypted part of the password to be saved
     /// @return True once the save operation is complete
-    function saveNewPassword(string memory _password) public payable cannotBeBusy returns (bool){
+    function saveNewPassword(string memory _unencryptedPart, string memory _encryptedPart) public payable cannotBeBusy returns (bool){
+
+        //Assemble the password parts into the Password struct
+        Password memory _newPassword = Password(_unencryptedPart, _encryptedPart);
 
         //add to passwords mapping
-        passwords[msg.sender].push(_password);
+        passwords[msg.sender].push(_newPassword);
 
-        emit PasswordSaved(msg.sender, _password);
+        emit PasswordSaved(msg.sender);
 
         //return true
         return true;
@@ -110,10 +122,14 @@ contract PasswordManager is Ownable{
     /// @dev The msg.sender address must have passwords saved in the passwords mapping. Otherwise, the hasAPassword modifier throws an error.
     /// @dev cannotBeBusy modifier checks whether some functions did not complete; used to prevent re-entrancy attacks
     /// @param _index The index of the password to be updated
-    /// @param _updatedPassword The encrypted password to be updated
+    /// @param _unencryptedPart The unencrypted part of the password to be updated
+    /// @param _encryptedPart The encrypted part of the password to be updated
     /// @return True once the update operation is complete
-    function updatePassword(uint _index, string memory _updatedPassword) public hasAPassword cannotBeBusy returns (bool){ 
+    function updatePassword(uint _index, string memory _unencryptedPart, string memory _encryptedPart) public hasAPassword cannotBeBusy returns (bool){ 
 
+        //Assemble the password parts into the Password struct
+        Password memory _updatedPassword = Password(_unencryptedPart, _encryptedPart);
+        
         //update password
         passwords[msg.sender][_index] = _updatedPassword;
 

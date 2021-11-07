@@ -7,7 +7,6 @@ import {bufferToHex}  from 'ethereumjs-util';
 import {encrypt} from 'eth-sig-util';
 import { OnboardingButton } from './MetaMask_OnboardingButton';
 import Button from './Button_Styled';
-import { getEncryptionPublicKey } from 'eth-sig-util';
  
 class App extends React.Component {
 
@@ -43,7 +42,6 @@ class App extends React.Component {
     this.flipLoading = this.flipLoading.bind(this);
 
     this.setBusy = this.setBusy.bind(this);
-
   }
 
   setBusy() {
@@ -79,9 +77,7 @@ class App extends React.Component {
     const accounts = await web3.eth.getAccounts();
     this.setState({account: accounts[0]});
     window.ethereum.on('accountsChanged', (accounts) => {
-      // this.setState({account: accounts[0]});
       window.location.reload();
-      // this.render();
     });
     window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
 
@@ -97,11 +93,8 @@ class App extends React.Component {
       this.setState({passwordManager});
       this.setState({contractOwner});
 
-      // let saveEvent = passwordManager.events.allEvents({filter: {ReturnValues: this.state.account}, fromBlock: 0, toBlock: 'latest'}, (error, event) => { console.log(event); this.render() });
-
-      let anyEvent = this.state.passwordManager.events.allEvents({filter: {$0: this.state.account}}/*, function(error, event){ console.log(event); }*/)
+      this.state.passwordManager.events.allEvents({filter: {$0: this.state.account}})
       .on('data', async (event) => {
-        // let announce = `${event.event} was emitted by \n${event.returnValues[0]}`
         let announce;
         switch(event.event) {
           case "PasswordSaved":
@@ -122,32 +115,17 @@ class App extends React.Component {
           this.setState({isBusy: false});
           this.flipLoading();
       })
-      .on('changed', function(event){
-          // remove event from local database
-      })
       .on('error', ( (error) => {
         console.error(error);
         this.setState({isBusy: false});
         }))
 
-
-
               /* Get encrypted password list from contract */
-        try{
-                  
-         
+        try{   
         await this.getPasswordList();
-        // console.log("Enc: " + this.state.pwdListEncrypted);
-
-
-        console.log(this.state.pwdListDecrypted);
-        console.log(this.state.pwdListDecrypted.length);
-        console.log(this.state.pwdListDecrypted[0]);
-
         } catch(error) {
           console.log(error);
                   this.setState({isBusy: false});
-
         }
     } 
     else {
@@ -155,30 +133,25 @@ class App extends React.Component {
     }
     }
 
-
   async getPasswordList() {
-
-    this.setState({pwdListDecrypted:[]});
+   this.setState({pwdListEncrypted: []});
 
     try {
           //Because of the design of the contract, you have to specify 'from' address; otherwise will revert because of modifier.
-          let pwdListEncrypted = await this.state.passwordManager.methods.getPasswordList().call({from: this.state.account})//.map( (pwd) =>  this.decrypt(pwd));
-          
+          let pwdListEncrypted = await this.state.passwordManager.methods.getPasswordList().call({from: this.state.account});
+          this.setState({pwdListEncrypted});
+          // let pwdListDecrypted =  pwdListEncrypted;
+          console.log(`pwdListEncrypted: ${pwdListEncrypted}`);
+          // console.log(`pwdListDecrypted: ${pwdListDecrypted}`);
+         
 
-          // this.setState({pwdListEncrypted, loading: false});
-
-          
-          await pwdListEncrypted.forEach(async (pwd) => 
-          {
-            let decryptedPwd = await this.decrypt(pwd);
-            // console.log("decryptedPWD: " + decryptedPwd)
-            
-            // console.log("decryptedPWD.domain: " + decryptedPwd.domain)
-            this.setState({pwdListDecrypted: [...this.state.pwdListDecrypted, decryptedPwd]});
-          });
+          // this.setState({pwdListDecrypted});
+  
+  
 
 } catch (error) {
   console.log(error);
+
   this.setState({isBusy: false});
 }
   }
@@ -200,7 +173,8 @@ class App extends React.Component {
             .catch((error) => {
               if (error.code === 4001) {
                 // EIP-1193 userRejectedRequest error
-                console.log("We can't encrypt anything without the key.");
+                alert("We can't encrypt anything without the key.");
+                window.location.reload();
               } else {
                 console.error(error);
               }
@@ -216,23 +190,12 @@ class App extends React.Component {
       params: [encryptedContent, this.state.account],
     })
     .then((initialPWD) => JSON.parse(initialPWD))
-    
-    // .then((decryptedMessage) => {
-    //   console.log('The decrypted message is:' + decryptedMessage);
-    //   // decryptedResult = decryptedMessage;
-    //   // console.log('The decryptedResult is:' + decryptedResult);
-      
-    // })
-    // .catch((error) => console.log(error.message));
-    // // console.log(decryptedResult);
-    // // return(decryptedResult);
+
     return decryptedResult;
   }
 
   encrypt(content){
       /* Encrypting */
-  // Currently this encryption method is not working (getting error messages). 
-  //TODO: May implement other basic encryption/hash just to test the flow of the app and interactions with different functions in the contract.
   const encryptedMessage = bufferToHex(
     Buffer.from(
       JSON.stringify(
@@ -245,15 +208,8 @@ class App extends React.Component {
       'utf8'
     )
   );
-
-  // let encryptedMessage = "";
-
   return encryptedMessage;
   }
-
-
-
-      
 
   updateParam(event) {
     
@@ -269,40 +225,36 @@ class App extends React.Component {
     console.log(this.state.focusPwdPassword);
   }
 
-  prepareToUpdate(_index) {
+  // prepareToUpdate(_index) {
 
-    console.log(_index);
-    const focusPassword = this.state.pwdListDecrypted[_index];
+  //   console.log(_index);
+  //   const focusPassword = this.state.pwdListDecrypted[_index];
+  //   this.setState({
+  //     updateStatus: true, 
+  //     focusPwdIndex: _index, 
+  //     focusPwdDomain: focusPassword.domain, 
+  //     focusPwdUsername: focusPassword.username,
+  //     focusPwdPassword: focusPassword.password
+
+  //     })
+  // }
+
+  prepareToUpdate(_pwd) {
+
+    console.log(_pwd.index);
+    const focusPwdPassword = _pwd.password;
     this.setState({
       updateStatus: true, 
-      focusPwdIndex: _index, 
-      focusPwdDomain: focusPassword.domain, 
-      focusPwdUsername: focusPassword.username,
-      focusPwdPassword: focusPassword.password
+      focusPwdIndex: _pwd.index, 
+      focusPwdDomain: _pwd.domain, 
+      focusPwdUsername: _pwd.username,
+      focusPwdPassword
 
       })
   }
 
 
-  async deletePassword(_index) {
-        try{
-    const passwordDeleted = await this.state.passwordManager.methods.deletePassword(_index).send({ from: this.state.account});
-        console.log(passwordDeleted);
-
-      } catch(error) {
-        console.log(error);
-        this.setState({isBusy: false});
-      }
-   
-                  
-         
-      // await this.getPasswordList();
-
-  }
-
-
   async savePassword(event) {
-    // this.setState({loading: true});
     event.preventDefault();
     console.log(event)
 
@@ -316,17 +268,17 @@ class App extends React.Component {
       return "";
     }
 
-    const _newPassword = {domain: _domain, username: _username, password: _password};
+    const _newPartToBeEncrypted = {username: _username, password: _password};
 
-    for (let p of this.state.pwdListDecrypted) {
-      if (p.domain === _domain && p.username === _username && p.password === _password) {
-        alert('You already have this password saved.');
-        this.setState({isBusy: false});
-        return "";
-      }
-    }
+    // for (let p of this.state.pwdListDecrypted) {
+    //   if (p.domain === _domain && p.username === _username && p.password === _password) {
+    //     alert('You already have this password saved.');
+    //     this.setState({isBusy: false});
+    //     return "";
+    //   }
+    // }
 
-    let newPassword = JSON.stringify(_newPassword);
+    let newPartToBeEncrypted = JSON.stringify(_newPartToBeEncrypted);
 
           // /* Get public encryption Key */
           if (!this.state.encryptionPublicKey) {
@@ -339,9 +291,18 @@ await this.getEncryptionKey();
         this.setState({isBusy: false});
       }
           }
-  let _encryptedPassword = this.encrypt(newPassword);
-  console.log(`_encryptedPassword: ${_encryptedPassword}`);
-  
+
+  let _newEncryptedPart = this.encrypt(newPartToBeEncrypted);
+  console.log(`_newEncryptedPart: ${_newEncryptedPart}`);
+
+    for (let p of this.state.pwdListEncrypted) {
+
+      if (p.unencryptedPart === _domain && p.encryptedPart === _newEncryptedPart) {
+        alert('You already have this password saved.');
+        this.setState({isBusy: false});
+        return "";
+      }
+    }
 
 this.setState({isBusy: true});
 
@@ -349,7 +310,7 @@ this.setState({isBusy: true});
     let _index = this.state.focusPwdIndex;
     
         try{
-    const passwordUpdated = await this.state.passwordManager.methods.updatePassword(_index, _encryptedPassword).send({from: this.state.account});
+    const passwordUpdated = await this.state.passwordManager.methods.updatePassword(_index, _domain, _newEncryptedPart).send({from: this.state.account});
     console.log(passwordUpdated);
       } catch(error) {
         console.log(error);
@@ -358,7 +319,7 @@ this.setState({isBusy: true});
 
   }else{
     try{
-      const passwordSaved = await this.state.passwordManager.methods.saveNewPassword(_encryptedPassword).send({from: this.state.account});
+      const passwordSaved = await this.state.passwordManager.methods.saveNewPassword(_domain, _newEncryptedPart).send({from: this.state.account});
           console.log(passwordSaved);
 
       } catch(error) {
@@ -366,21 +327,10 @@ this.setState({isBusy: true});
         this.setState({isBusy: false});
       }
   }
-  
-         
-      // await this.getPasswordList();
-
-
-
-
 
   this.resetFields();
 
-
- 
   }
-
-
 
   resetFields() {
     this.setState({focusPwdIndex: null});
@@ -388,65 +338,47 @@ this.setState({isBusy: true});
   this.setState({focusPwdUsername: ''});
   this.setState({focusPwdPassword: ''});
   this.setState({updateStatus: false});
-  // this.setState({loading: false});
   }
+
+  async deletePassword(_index) {
+        try{
+    const passwordDeleted = await this.state.passwordManager.methods.deletePassword(_index).send({ from: this.state.account});
+        console.log(passwordDeleted);
+
+      } catch(error) {
+        console.log(error);
+        this.setState({isBusy: false});
+      }
+
+  }
+
 
 render() {
   console.log(this.state.pwdListDecrypted);
   console.log(this.state.pwdListDecrypted.length);
   console.log(this.state.pwdListDecrypted[0]);
 
-let first = this.state.account.slice(0, 4)
-let last = this.state.account.slice(-4)
-// let l = this.state.account.length-1;
-// let b = this.state.account[l];
-  // const displayAndUpdateList =     (
-  //   <>
-  //   <PWList id='pwdList'
-  //   pwdListDecrypted = {this.state.pwdListDecrypted}
-  //   prepareToUpdate = {this.prepareToUpdate}
-  //   deletePassword = {this.deletePassword}
-  //   loading = {this.state.loading}
-  //   />
-
-  // {this.state.updateStatus ? <h2>Update Password</h2> : <h2>Add new Password</h2>}
-
-  //   <AddOrUpdatePWD
-  //     flipLoading = {this.flipLoading}
-  //     focusPwdIndex = {this.state.focusPwdIndex}
-  //     focusPwdDomain = {this.state.focusPwdDomain}
-  //     focusPwdUsername = {this.state.focusPwdUsername}
-  //     focusPwdPassword = {this.state.focusPwdPassword}
-  //     updateParam = {this.updateParam}
-  //     savePassword = {this.savePassword} 
-  //     resetFields = {this.resetFields}
-  //     />
-  //     </>
-  //   )
   return (
     <div>
     <AppHeader/>
-
-    {/* Still working on buttons and testing. Work in progress  */}
-    {/* <MetaMaskConnectButton account = {this.state.account}/> */}
-    {/* <ContractConnectButton /> */}
-    {/* <div className="Connect-Button"> */}
     <OnboardingButton
     />
-    {/* </div> */}
 
-     <h2>Password List - Account {this.state.account ? first+'...'+last/*this.state.account*/ : '[No account connected]'}</h2>
-      {/* <h3>{this.getOwner()}</h3> */}
+     <h2>Password List - Account {this.state.account ? this.state.account.slice(0, 4)+'...'+this.state.account.slice(-4)/*this.state.account*/ : '[No account connected]'}</h2>
 
-    {this.state.loading ?
+    {this.state.account? this.state.loading ?
     "Loading password list.....":  (
       <>
       <PWList id='pwdList'
+      decrypt = {this.decrypt}
                 setBusy = {this.setBusy}
                 isBusy = {this.state.isBusy}
-      pwdListDecrypted = {this.state.pwdListDecrypted}
+      // pwdListDecrypted = {this.state.pwdListDecrypted}
+      pwdListEncrypted = {this.state.pwdListEncrypted}
+
       prepareToUpdate = {this.prepareToUpdate}
       deletePassword = {this.deletePassword}
+      // showPassword = {this.showPassword}
       loading = {this.state.loading}
       />
   
@@ -465,7 +397,7 @@ let last = this.state.account.slice(-4)
         resetFields = {this.resetFields}
         />
         </>
-      )}
+      ):""}
 
 
      </div>
@@ -484,12 +416,11 @@ class AppHeader extends React.Component {
       
 
     <header className="App-header">
-        {/* <img src={logo} className="App-logo" alt="logo" /> */}
         <h1>
           Password Manager
         </h1> 
         <p> 
-          Version 0.3.0
+          Version 1.0.0
         </p>      
       </header>
       
@@ -497,69 +428,39 @@ class AppHeader extends React.Component {
   }
 }
 
-/* MetaMask Button Class */
-class MetaMaskConnectButton extends React.Component {
-
-
-
-
- connectMM() {
-    
-
-
-    let accounts = null;
-    // const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    try {
-       accounts = window.ethereum.request({ method: 'eth_accounts' });
-       const account = accounts[0];
-      console.log(account);
-// const listener1 = window.ethereum.on('accountsChanged', (accounts) => {
-    window.ethereum.on('accountsChanged', (accounts) => {
-    console.log('new account = ' +accounts[0]);
-  alert('new account = ' +accounts[0]);
-});
-// const listener2 = window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
-  window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
-
-let connectButton = document.getElementById('connectMMButton')
-connectButton.innerHTML = (`Connected to ${account}`)
-    } catch (error) {
-      console.error(error);
-    }
-
-
-
-  }
-
-
-  render(){
-    let account = this.props.account;
-    
-    return(
-    <Button id='connectMMButton' onClick = {this.connectMM} disabled = {account}>
-     
-     {account ? `Connected to ${account}` : 'Connect to Metamask'}
-    </Button>
-    )
-  }
-}
 
 /* Password List Class */
 class PWList extends React.Component {
+  // constructor(props) {
+  //   super(props);
 
+  //   this.state = {
+  //     pwdListDecrypted: []
+  //   }
+  // }
   render(){
 
-    let pwdListDecrypted = this.props.pwdListDecrypted;
-    let numberOfPasswords = pwdListDecrypted.length;
-    let index = 0;
-      for (let p of pwdListDecrypted) {
-        p.index = index;
-        index++;
+    let _pwdListEncrypted = [];
+    let numberOfPasswords = this.props.pwdListEncrypted.length;
+    let i = 0;
+      for (let p of this.props.pwdListEncrypted) {
+        // Object.assign({index: i}, p)
+        // console.log(`pwdListDecrypted ${i}: ${pwdListDecrypted[i]}`);
+        // let [a,] = 
+        // console.log(`pwdListDecrypted ${i}.$0: ${pwdListDecrypted($0)}`);
+        console.log(`p: ${p}`);
+        let [a,b] = p;
+        
+        let newP = {domain: a, _encryptedPart: b, index: i, decrypted: false, hidden: true};
+        _pwdListEncrypted.push(newP);
+        i++;
       }
-     
-    const passwords = pwdListDecrypted.map((pwd) =>
+             console.log(`_pwdListEncrypted: ${_pwdListEncrypted}`);
+
+    const passwords = _pwdListEncrypted.map((pwd) =>
     
           < DisplayPW
+          decrypt = {this.props.decrypt}
           setBusy = {this.props.setBusy}
           isBusy = {this.props.isBusy}
 
@@ -568,13 +469,13 @@ class PWList extends React.Component {
           key = {pwd.index}
 
           pwd = {pwd}
+          showPassword = {this.props.showPassword}
                prepareToUpdate = {this.props.prepareToUpdate}
      deletePassword = {this.props.deletePassword}
           />
           ); 
 
-          // console.log("List: " + pwdListDecrypted);
-        return(
+          return(
           <div>
           <h3>{numberOfPasswords > 0 ? "No of passwords: " + numberOfPasswords : "No saved passwords."} </h3>
      
@@ -587,20 +488,34 @@ class PWList extends React.Component {
 }
 
 /*Display Password Class */
+//TODO:
 class DisplayPW extends React.Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      pwd: ''
+    }
     this.handleUpdate = this.handleUpdate.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
+    this.handleShowPassword = this.handleShowPassword.bind(this);
   }
 
-    handleUpdate(e) {
-      e.preventDefault();
-      // let updateButton = document.getElementById('updateButton');
-      // updateButton.disabled = true;
-    this.props.prepareToUpdate(this.props.pwd.index);
 
+
+    async handleUpdate(e) {
+      e.preventDefault();
+      
+      let pwd = this.state.pwd ? this.state.pwd : this.props.pwd;
+      
+      if (pwd.decrypted){
+
+    this.props.prepareToUpdate(pwd);
+  } else {
+        await this.decryptAndShow(pwd)
+    // do{}while(!pwd.decrypted);
+    // this.props.prepareToUpdate(this.state.pwd);
+      }
   }
 
     handleDelete(e) {
@@ -608,11 +523,40 @@ class DisplayPW extends React.Component {
  
       this.props.setBusy();
       this.props.deletePassword(this.props.pwd.index);
-     
-
   }
+
+  async decryptAndShow(_pwd){
+
+    const decrypt = this.props.decrypt;
+    console.log(_pwd);
+    let _domain = _pwd.domain;
+    let _encryptedPart = _pwd._encryptedPart;
+    let decryptedPassword = await decrypt(_encryptedPart);     
+    let _username = decryptedPassword.username;
+    let _password = decryptedPassword.password;
+    let pwd = {domain: _domain, username: _username, password: _password, index: _pwd.index, hidden: false, decrypted: true}; 
+    this.setState({pwd});
+
+    // let usernameField = document.getElementById('usernameField');
+    // let passwordField = document.getElementById('passwordField');
+    // usernameField.value = this.state.pwd.username;
+    // passwordField.value = this.state.pwd.password;
+  }
+
+  handleShowPassword(e) {
+          e.preventDefault();
+
+          let pwd = this.state.pwd? this.state.pwd : this.props.pwd;
+          if(!pwd.decrypted){
+            this.decryptAndShow(pwd);
+          }
+          let newP = {...pwd, hidden: !pwd.hidden}
+          this.setState({pwd: newP});
+  }
+
   render(){
-      let pwd = this.props.pwd;
+      let pwd = this.state.pwd? this.state.pwd : this.props.pwd;
+
         return(
           <form onSubmit={this.handleUpdate}>
           <label>
@@ -623,19 +567,22 @@ class DisplayPW extends React.Component {
             <label>
             Username:
             </label>
-             <input type="text" name="username" value={pwd.username} readOnly/>
+             <input id='usernameField' type="text" name="username" value={pwd.hidden? "********************" : pwd.username} readOnly/>
             <label>
             Password:
             </label>
-             <input type="text" name="password" value={pwd.password} readOnly/>
+             <input id='passwordField' type="text" name="password" value={pwd.hidden? "********************" : pwd.password} readOnly/>
 
           
-          {/* <input type="submit" value="Update" /> */}
-          <Button id='updateButton' type="submit" disabled = {this.props.isBusy}>
-            Update
+           <Button id='updateButton' type="submit" disabled = {this.props.isBusy}>
+            {pwd.decrypted?'Update':'Decrypt'}
             </Button>
           <Button id='deleteButton' onClick={this.handleDelete} disabled = {this.props.isBusy}>
           Delete
+          </Button>
+                
+                <Button id='showButton' onClick={this.handleShowPassword} disabled = {this.props.isBusy}>
+          {pwd.hidden? "Show Password" : "Hide Password"}
           </Button>
         </form>
         )
@@ -656,8 +603,7 @@ class AddOrUpdatePWD extends React.Component {
   }
 
     handleSave(e) {
-      // let saveButton = document.getElementById('saveButton');
-      // saveButton.disabled = true;
+
       this.props.setBusy();
     this.props.savePassword(e);
 
@@ -690,7 +636,6 @@ class AddOrUpdatePWD extends React.Component {
          <input type="text" name="focusPwdPassword" placeholder="Enter Password" value={this.props.focusPwdPassword} onChange={this.handleChange}/>
          </label>
 
-      {/* <input type="submit" value="Save" /> */}
       <Button id='saveButton' onClick={this.handleSave} disabled = {this.props.isBusy}>
           Save
           </Button>
@@ -698,6 +643,7 @@ class AddOrUpdatePWD extends React.Component {
                 <Button id='cancelButton' onClick={this.handleCancel} disabled = {this.props.isBusy}>
           Cancel
           </Button>
+          
       </form>
         )
   }

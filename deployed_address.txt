@@ -1,2 +1,2 @@
 network : Ropsten (ID: 3)
-testnet address : 0x3281b2011156eE2eE6972A1E1781e825b899D8DE
+testnet address : 0xe32d67A7E6952e6b39501E0574b88b9e05132f56

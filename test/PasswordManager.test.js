@@ -103,9 +103,9 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
     //  });
     //         const passwordList =  await passwordManager.getPasswordList({ from: client1
     //  });
-    const result = await passwordManager.saveNewPassword(password1, {from: client1
+    const result = await passwordManager.saveNewPassword(domain1, password1, {from: client1
     });
-           const result2 = await passwordManager.saveNewPassword(password2, {from: client1
+           const result2 = await passwordManager.saveNewPassword(domain2, password2, {from: client1
     });
            const passwordList =  await passwordManager.getPasswordList({ from: client1
     });
@@ -117,6 +117,7 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
 
             console.log(passwordList)
             console.log(passwordList[0])
+            console.log([{domain1, password1}])
         
     //         assert.equal(passwordList[0],
     //             // [{domain1, username1, password1}],
@@ -125,8 +126,8 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
     // password: '0x70617373776f7264310000000000000000000000000000000000000000000000'}],
     //             "Passwords are not stored in a list",
     //           );
-              assert.equal(passwordList[0],
-                password1,
+              assert.equal(passwordList[0].unencryptedPart,
+                domain1, 
                 "Passwords are not stored in a list",
               );
         })
@@ -155,9 +156,9 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
         //The test saves two passwords and checks that the password list contains two passwords.
         // The test should pass.
         it("Password List length should equal number of passwords saved.", async () => {
-            const result = await passwordManager.saveNewPassword(password1, {from: client1
+            const result = await passwordManager.saveNewPassword(domain1, password1, {from: client1
      });
-            const result2 = await passwordManager.saveNewPassword(password2, {from: client1
+            const result2 = await passwordManager.saveNewPassword(domain2, password2, {from: client1
      });
             const passwordList = await passwordManager.getPasswordList({ from: client1
      });
@@ -174,7 +175,7 @@ contract('PasswordManager', ([ownerAccount, client1, client2]) => {
         //The test saves one password for client 2 and checks that their password list contains 1 password (not 2 passwords).
         // The test should pass.
         it("Each user should only have access to their password list.", async () => {
-            const result = await passwordManager.saveNewPassword(password1, {from: client2 });
+            const result = await passwordManager.saveNewPassword(domain1, password1, {from: client2 });
             // const result2 = await passwordManager.saveNewPassword(domain2, username2, password2, {from: client2 });
             const passwordList = await passwordManager.getPasswordList({ from: client2 });
 

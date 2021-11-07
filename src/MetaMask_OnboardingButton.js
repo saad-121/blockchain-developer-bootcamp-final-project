@@ -1,9 +1,6 @@
 import MetaMaskOnboarding from '@metamask/onboarding';
-import Web3 from 'web3';
 import React, {useState, useEffect, useRef} from 'react';
 import Button from './Button_Styled';
-
-import {abi, networks} from './build/PasswordManager.json';
 
 
 const ONBOARD_TEXT = 'Click here to install MetaMask!';
@@ -52,17 +49,6 @@ export function OnboardingButton(props) {
     }
   },[]); 
 
-//   useEffect(() => {
-//     let web3 = new Web3(window.ethereum);
-//     let networkID = async () => await web3.eth.net.getId();
-  
-//     const networkData = networks[networkID];
-// if (networkData){
-//   const contractAddress = networks[networkID].address;
-//   const passwordManager = new web3.eth.Contract(abi, contractAddress);
-
-//   }
-// }, [accounts]);
 
   const onClick = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
@@ -70,7 +56,6 @@ export function OnboardingButton(props) {
         .request({ method: 'eth_requestAccounts' })
         .then((newAccounts) => {
           setAccounts(newAccounts);
-          // props.setAccount(newAccounts[0]);
         })
     } else {
       onboarding.current.startOnboarding();
