@@ -31,7 +31,7 @@ Then to install dependencies, run `npm install` or `npm run bootstrap` in the pr
 ## Where the frontend project can be accessed
 
 
-## Where the frontend project can be accessed
+## Walk-through
 A screencast of walking through the project can be accessed here: https://www.loom.com/share/3dd5cdf3274c4a5ead6e150d3f6ebe8f
 ## How to populate the .env locally with your own information
 Fill out the keys and addresses in the ".env.example" file and rename the file to ".env"
