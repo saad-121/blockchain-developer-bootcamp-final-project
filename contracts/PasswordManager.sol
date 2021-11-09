@@ -10,31 +10,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @dev Inherits OpenZeppelin's Ownable module
 contract PasswordManager is Ownable{
 
-    //fallback function
     /// @notice Receive Eth
     /// @dev Receive Eth if data is empty
     fallback() payable external {
     balance += msg.value;
     }
 
-    //receive function 
     /// @notice Receive Eth
     /// @dev Receive Eth if data is not empty
     receive() payable external {
     balance += msg.value;
     }
-
-    //TODO Comments - Done: Added Natspec Format comments.
-
-    //TODO Use at least two design patterns from the "Smart Contracts" section - Done: Added to design_pattern_decisions.md
-
-    //TODO Protect against two attack vectors from the "Smart Contracts" section with its the SWC number - Done: Added to avoiding_common_attacks.md
-
-    //TODO Inherits from at least one library or interface - Done: Inherits from Openzeppelin's Ownable
-
-    //TODO Can be easily compiled, migrated and tested
-    //TODO Have at least five unit tests for your smart contract(s) that pass. - Done: Have six tests that pass.
-    //In the code, include a sentence or two explaining what the tests are covering their expected behavior. - Done: added comments to the tests.
 
     /* Events */
     /// @notice Event emitted when a password is saved
@@ -49,9 +35,6 @@ contract PasswordManager is Ownable{
     /// @param updatedBy The address of the msg.sender who updated the password
     event PasswordUpdated(address indexed updatedBy);
 
-    // address public owner;
-
-    //contract ballance
     /// @notice The balance of Eth in the contract
     /// @return The balance of Eth in the contract (when the automatic getter function is called)
     uint public balance;
@@ -66,7 +49,7 @@ contract PasswordManager is Ownable{
 
 
     //Struct for storing passwords
-    //Contains a string with unencrypted Domain
+    //Contains a string with the unencrypted Domain
     //Contains a string with encrypted username and password
     struct Password{
         string unencryptedPart;

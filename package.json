@@ -1,20 +1,16 @@
 {
   "name": "blockchain-developer-bootcamp-final-project",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@metamask/eth-sig-util": "^4.0.0",
     "@metamask/onboarding": "^1.0.1",
     "@openzeppelin/contracts": "^4.3.2",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
     "@truffle/hdwallet-provider": "^1.0.37",
-    "crypto": "^1.0.1",
-    "eth-crypto": "^2.1.0",
     "eth-sig-util": "^3.0.1",
     "ethereumjs-util": "^7.1.2",
-    "ethereumjs-wallet": "^1.0.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "^3.4.4",
@@ -26,8 +22,11 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test": "truffle test",
+    "eject": "react-scripts eject",
+    "bootstrap": "clear && npm install",
+    "deploy": "clear && npm install && truffle migrate --reset",
+    "deployropsten": "clear && npm install && truffle migrate --network ropsten --reset"
   },
   "eslintConfig": {
     "extends": [
