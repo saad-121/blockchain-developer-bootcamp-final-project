@@ -140,15 +140,7 @@ class App extends React.Component {
           //Because of the design of the contract, you have to specify 'from' address; otherwise will revert because of modifier.
           let pwdListEncrypted = await this.state.passwordManager.methods.getPasswordList().call({from: this.state.account});
           this.setState({pwdListEncrypted});
-          // let pwdListDecrypted =  pwdListEncrypted;
-          console.log(`pwdListEncrypted: ${pwdListEncrypted}`);
-          // console.log(`pwdListDecrypted: ${pwdListDecrypted}`);
-         
-
-          // this.setState({pwdListDecrypted});
-  
-  
-
+          // console.log(`pwdListEncrypted: ${pwdListEncrypted}`);
 } catch (error) {
   console.log(error);
 
@@ -167,7 +159,7 @@ class App extends React.Component {
             })
             .then((result) => {
               encryptionPublicKey = result;
-              console.log(encryptionPublicKey);
+              // console.log(encryptionPublicKey);
               this.setState({encryptionPublicKey})
             })
             .catch((error) => {
@@ -218,30 +210,16 @@ class App extends React.Component {
 
     this.setState({
       [name]: value});
-      console.log(event);
-    console.log(event.target.value);
-    console.log(this.state.focusPwdDomain);
-    console.log(this.state.focusPwdUsername);
-    console.log(this.state.focusPwdPassword);
+    //   console.log(event);
+    // console.log(event.target.value);
+    // console.log(this.state.focusPwdDomain);
+    // console.log(this.state.focusPwdUsername);
+    // console.log(this.state.focusPwdPassword);
   }
-
-  // prepareToUpdate(_index) {
-
-  //   console.log(_index);
-  //   const focusPassword = this.state.pwdListDecrypted[_index];
-  //   this.setState({
-  //     updateStatus: true, 
-  //     focusPwdIndex: _index, 
-  //     focusPwdDomain: focusPassword.domain, 
-  //     focusPwdUsername: focusPassword.username,
-  //     focusPwdPassword: focusPassword.password
-
-  //     })
-  // }
 
   prepareToUpdate(_pwd) {
 
-    console.log(_pwd.index);
+    // console.log(_pwd.index);
     const focusPwdPassword = _pwd.password;
     this.setState({
       updateStatus: true, 
@@ -256,7 +234,7 @@ class App extends React.Component {
 
   async savePassword(event) {
     event.preventDefault();
-    console.log(event)
+    // console.log(event)
 
     let _domain = this.state.focusPwdDomain;
     let _username = this.state.focusPwdUsername;
@@ -269,15 +247,6 @@ class App extends React.Component {
     }
 
     const _newPartToBeEncrypted = {username: _username, password: _password};
-
-    // for (let p of this.state.pwdListDecrypted) {
-    //   if (p.domain === _domain && p.username === _username && p.password === _password) {
-    //     alert('You already have this password saved.');
-    //     this.setState({isBusy: false});
-    //     return "";
-    //   }
-    // }
-
     let newPartToBeEncrypted = JSON.stringify(_newPartToBeEncrypted);
 
           // /* Get public encryption Key */
@@ -286,14 +255,14 @@ class App extends React.Component {
                   try{
 await this.getEncryptionKey();      
 } catch(error) {
-        console.log(error);
+        // console.log(error);
         alert('The encryption key is needed to save passwords.');
         this.setState({isBusy: false});
       }
           }
 
   let _newEncryptedPart = this.encrypt(newPartToBeEncrypted);
-  console.log(`_newEncryptedPart: ${_newEncryptedPart}`);
+  // console.log(`_newEncryptedPart: ${_newEncryptedPart}`);
 
     for (let p of this.state.pwdListEncrypted) {
 
@@ -354,9 +323,9 @@ this.setState({isBusy: true});
 
 
 render() {
-  console.log(this.state.pwdListDecrypted);
-  console.log(this.state.pwdListDecrypted.length);
-  console.log(this.state.pwdListDecrypted[0]);
+  // console.log(this.state.pwdListDecrypted);
+  // console.log(this.state.pwdListDecrypted.length);
+  // console.log(this.state.pwdListDecrypted[0]);
 
   return (
     <div>
@@ -373,12 +342,9 @@ render() {
       decrypt = {this.decrypt}
                 setBusy = {this.setBusy}
                 isBusy = {this.state.isBusy}
-      // pwdListDecrypted = {this.state.pwdListDecrypted}
       pwdListEncrypted = {this.state.pwdListEncrypted}
-
       prepareToUpdate = {this.prepareToUpdate}
       deletePassword = {this.deletePassword}
-      // showPassword = {this.showPassword}
       loading = {this.state.loading}
       />
   
@@ -431,31 +397,22 @@ class AppHeader extends React.Component {
 
 /* Password List Class */
 class PWList extends React.Component {
-  // constructor(props) {
-  //   super(props);
 
-  //   this.state = {
-  //     pwdListDecrypted: []
-  //   }
-  // }
   render(){
 
     let _pwdListEncrypted = [];
     let numberOfPasswords = this.props.pwdListEncrypted.length;
     let i = 0;
       for (let p of this.props.pwdListEncrypted) {
-        // Object.assign({index: i}, p)
-        // console.log(`pwdListDecrypted ${i}: ${pwdListDecrypted[i]}`);
-        // let [a,] = 
-        // console.log(`pwdListDecrypted ${i}.$0: ${pwdListDecrypted($0)}`);
-        console.log(`p: ${p}`);
+
+        // console.log(`p: ${p}`);
         let [a,b] = p;
         
         let newP = {domain: a, _encryptedPart: b, index: i, decrypted: false, hidden: true};
         _pwdListEncrypted.push(newP);
         i++;
       }
-             console.log(`_pwdListEncrypted: ${_pwdListEncrypted}`);
+            //  console.log(`_pwdListEncrypted: ${_pwdListEncrypted}`);
 
     const passwords = _pwdListEncrypted.map((pwd) =>
     
@@ -463,15 +420,13 @@ class PWList extends React.Component {
           decrypt = {this.props.decrypt}
           setBusy = {this.props.setBusy}
           isBusy = {this.props.isBusy}
-
           flipLoading = {this.props.flipLoading}
 
           key = {pwd.index}
-
           pwd = {pwd}
           showPassword = {this.props.showPassword}
-               prepareToUpdate = {this.props.prepareToUpdate}
-     deletePassword = {this.props.deletePassword}
+          prepareToUpdate = {this.props.prepareToUpdate}
+          deletePassword = {this.props.deletePassword}
           />
           ); 
 
@@ -488,7 +443,6 @@ class PWList extends React.Component {
 }
 
 /*Display Password Class */
-//TODO:
 class DisplayPW extends React.Component {
   constructor(props) {
     super(props);
@@ -513,8 +467,6 @@ class DisplayPW extends React.Component {
     this.props.prepareToUpdate(pwd);
   } else {
         await this.decryptAndShow(pwd)
-    // do{}while(!pwd.decrypted);
-    // this.props.prepareToUpdate(this.state.pwd);
       }
   }
 
@@ -528,7 +480,7 @@ class DisplayPW extends React.Component {
   async decryptAndShow(_pwd){
 
     const decrypt = this.props.decrypt;
-    console.log(_pwd);
+    // console.log(_pwd);
     let _domain = _pwd.domain;
     let _encryptedPart = _pwd._encryptedPart;
     let decryptedPassword = await decrypt(_encryptedPart);     
@@ -537,10 +489,6 @@ class DisplayPW extends React.Component {
     let pwd = {domain: _domain, username: _username, password: _password, index: _pwd.index, hidden: false, decrypted: true}; 
     this.setState({pwd});
 
-    // let usernameField = document.getElementById('usernameField');
-    // let passwordField = document.getElementById('passwordField');
-    // usernameField.value = this.state.pwd.username;
-    // passwordField.value = this.state.pwd.password;
   }
 
   handleShowPassword(e) {
@@ -623,17 +571,17 @@ class AddOrUpdatePWD extends React.Component {
 
       <label>
         Domain *:
-        <input type="text" name="focusPwdDomain" placeholder="Enter Domain" value={this.props.focusPwdDomain} onChange={this.handleChange}/>
+        <input type="text" name="focusPwdDomain" placeholder="Enter Domain" value={this.props.focusPwdDomain} onChange={this.handleChange} autoComplete="off"/>
         </label>
 
         <label>
         Username:
-         <input type="text" name="focusPwdUsername" placeholder="Enter Username" value={this.props.focusPwdUsername} onChange={this.handleChange}/>
+         <input type="text" name="focusPwdUsername" placeholder="Enter Username" value={this.props.focusPwdUsername} onChange={this.handleChange} autoComplete="off"/>
          </label>
 
          <label>
         Password *:
-         <input type="text" name="focusPwdPassword" placeholder="Enter Password" value={this.props.focusPwdPassword} onChange={this.handleChange}/>
+         <input type="text" name="focusPwdPassword" placeholder="Enter Password" value={this.props.focusPwdPassword} onChange={this.handleChange} autoComplete="off"/>
          </label>
 
       <Button id='saveButton' onClick={this.handleSave} disabled = {this.props.isBusy}>
