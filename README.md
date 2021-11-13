@@ -29,8 +29,7 @@ Then to install dependencies, run `npm install` or `npm run bootstrap` in the pr
 - The .env.example file provides fields which should be populated by your own Infura account details, MetaMask mnemonics, any private keys. (see section below on .env population)
   
 ## Where the frontend project can be accessed
-
-
+https://icy-fire-8128.on.fleek.co
 ## Walk-through
 A screencast of walking through the project can be accessed here: https://www.loom.com/share/3dd5cdf3274c4a5ead6e150d3f6ebe8f
 ## How to populate the .env locally with your own information
@@ -52,3 +51,4 @@ To install truffle, you can run `npm install -g truffle`.
 Ganache can be downloaded from https://www.trufflesuite.com/ganache or you can install ganache-cli by running `npm install ganache-cli@latest --global`.
 
 ## Public Ethereum account
+
