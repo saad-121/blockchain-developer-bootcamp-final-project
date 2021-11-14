@@ -51,4 +51,4 @@ To install truffle, you can run `npm install -g truffle`.
 Ganache can be downloaded from https://www.trufflesuite.com/ganache or you can install ganache-cli by running `npm install ganache-cli@latest --global`.
 
 ## Public Ethereum account
-
+0xb731eF1D26227e1EdF48F9833E6B48EB11154917
